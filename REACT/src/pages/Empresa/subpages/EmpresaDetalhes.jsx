@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { getEmpresaDetails, updateEmpresaDetails } from '../../../services/api';
+import { getEmpresaDetails, updateEmpresaDetails } from '../../../services';
 import { useToast } from '../../../components/ToastNotification/ToastNotification';
 import Spinner from '../../../components/Spinner/Spinner';
 import { QUERY_KEYS } from '../../../constants/queryKeys';

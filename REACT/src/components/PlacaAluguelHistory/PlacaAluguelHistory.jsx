@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Importa hooks
 import Spinner from '../Spinner/Spinner';
 import { formatDate } from '../../utils/helpers';
-import { fetchAlugueisByPlaca, deleteAluguel } from '../../services/api';
+import { fetchAlugueisByPlaca, deleteAluguel } from '../../services';
 import { useToast } from '../ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
 

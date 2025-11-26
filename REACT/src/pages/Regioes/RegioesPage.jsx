@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Remover imports do dataCache (getRegioes, clearRegioesCache)
-import { createRegiao, updateRegiao, deleteRegiao, fetchRegioes } from '../../services/api'; // Importa fetchRegioes
+import { createRegiao, updateRegiao, deleteRegiao, fetchRegioes } from '../../services';
 import Spinner from '../../components/Spinner/Spinner';
 import Modal from '../../components/Modal/Modal';
 import { useToast } from '../../components/ToastNotification/ToastNotification';

@@ -1,7 +1,7 @@
 // src/pages/PIs/PIsPage.jsx
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createPI, deletePI, fetchPIs, updatePI, createContrato } from '../../services/api'; // Adicionado createContrato
+import { createPI, deletePI, fetchPIs, updatePI, createContrato } from '../../services';
 // import { usePlacaFilters } from '../../hooks/usePlacaFilters'; // <-- IMPORT REMOVIDO
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
@@ -70,39 +70,10 @@ function PIsPage() {
         onSuccess: (data, vars) => {
             showToast('Proposta criada com sucesso!', 'success');
             closeModal();
-            // Invalidate PIs list
+            // Invalidate queries simplificado
             queryClient.invalidateQueries({ queryKey: [pisQueryKey] });
-            // Selectively invalidate placasDisponiveis queries whose date range overlaps the saved PI
-            try {
-                const saved = vars?.data ? vars.data : vars;
-                const sInicio = saved?.dataInicio;
-                const sFim = saved?.dataFim;
-                if (sInicio && sFim) {
-                    queryClient.invalidateQueries({ predicate: (query) => {
-                        const k = query.queryKey;
-                        if (!Array.isArray(k)) return false;
-                        if (k[0] !== 'placasDisponiveis') return false;
-                        const qInicio = k[1] || '';
-                        const qFim = k[2] || '';
-                        // strings ISO 'yyyy-mm-dd' compare lexicographically
-                        // overlap if not (sFim < qInicio || sInicio > qFim)
-                        if (!qInicio || !qFim) return true; // conservador
-                        return !(sFim < qInicio || sInicio > qFim);
-                    }});
-                } else {
-                    // fallback: invalidate all placasDisponiveis
-                    queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-                }
-            } catch (e) {
-                // on error, fallback to broad invalidation
-                queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-            }
-            // Invalidate global placas list (usado pelo modal de seleção)
-            queryClient.invalidateQueries({ queryKey: ['placas', 'all'] });
-            // Invalidate placas page queries (atualiza a página de placas)
-            queryClient.invalidateQueries({ predicate: (query) => {
-                return Array.isArray(query.queryKey) && query.queryKey[0] === 'placas';
-            }});
+            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
+            queryClient.invalidateQueries({ queryKey: ['placas'] });
         },
         onError: (error, vars, context) => handleApiError(error, context, vars.setModalError)
     });
@@ -112,33 +83,10 @@ function PIsPage() {
         onSuccess: (data, vars) => {
             showToast('Proposta atualizada com sucesso!', 'success');
             closeModal();
+            // Invalidate queries simplificado
             queryClient.invalidateQueries({ queryKey: [pisQueryKey] });
-            try {
-                const saved = vars?.data ? vars.data : vars;
-                const sInicio = saved?.dataInicio || (saved?.data && saved.data.dataInicio);
-                const sFim = saved?.dataFim || (saved?.data && saved.data.dataFim);
-                if (sInicio && sFim) {
-                    queryClient.invalidateQueries({ predicate: (query) => {
-                        const k = query.queryKey;
-                        if (!Array.isArray(k)) return false;
-                        if (k[0] !== 'placasDisponiveis') return false;
-                        const qInicio = k[1] || '';
-                        const qFim = k[2] || '';
-                        if (!qInicio || !qFim) return true;
-                        return !(sFim < qInicio || sInicio > qFim);
-                    }});
-                } else {
-                    queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-                }
-            } catch (e) {
-                queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-            }
-            // Invalidate global placas list (usado pelo modal de seleção)
-            queryClient.invalidateQueries({ queryKey: ['placas', 'all'] });
-            // Invalidate placas page queries (atualiza a página de placas)
-            queryClient.invalidateQueries({ predicate: (query) => {
-                return Array.isArray(query.queryKey) && query.queryKey[0] === 'placas';
-            }});
+            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
+            queryClient.invalidateQueries({ queryKey: ['placas'] });
         },
         onError: (error, vars, context) => handleApiError(error, context, vars.setModalError)
     });
@@ -157,13 +105,10 @@ function PIsPage() {
         mutationFn: deletePI,
         onSuccess: () => {
             showToast('Proposta apagada com sucesso!', 'success');
+            // Invalidate queries simplificado
             queryClient.invalidateQueries({ queryKey: [pisQueryKey] });
-            // Invalidate placas queries quando PI é deletada (placas são liberadas)
             queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-            queryClient.invalidateQueries({ queryKey: ['placas', 'all'] });
-            queryClient.invalidateQueries({ predicate: (query) => {
-                return Array.isArray(query.queryKey) && query.queryKey[0] === 'placas';
-            }});
+            queryClient.invalidateQueries({ queryKey: ['placas'] });
         },
         onError: (error) => showToast(error.message || 'Erro ao apagar proposta.', 'error')
     });

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 // Importa as funções da API diretamente
-import { fetchDashboardSummary, fetchPlacasPorRegiaoReport } from '../../services/api';
+import { fetchDashboardSummary, fetchPlacasPorRegiaoReport } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import Spinner from '../../components/Spinner/Spinner';
 import { generateColors } from '../../utils/charts';

@@ -5,7 +5,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 // Importa a nova função de download
-import { fetchRelatorioOcupacao, downloadRelatorioOcupacaoPDF } from '../../services/api'; 
+import { fetchRelatorioOcupacao, downloadRelatorioOcupacaoPDF } from '../../services'; 
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import Spinner from '../../components/Spinner/Spinner';
 import { generateColors } from '../../utils/charts';

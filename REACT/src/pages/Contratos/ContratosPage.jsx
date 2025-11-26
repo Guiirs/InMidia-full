@@ -1,7 +1,7 @@
 // src/pages/Contratos/ContratosPage.jsx
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchContratos, updateContrato, deleteContrato, downloadContrato_PDF } from '../../services/api';
+import { fetchContratos, updateContrato, deleteContrato, downloadContrato_PDF } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
 import Spinner from '../../components/Spinner/Spinner';

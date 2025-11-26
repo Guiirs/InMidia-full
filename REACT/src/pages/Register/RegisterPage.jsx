@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form'; 
-import { registerEmpresa } from '../../services/api';
+import { registerEmpresa } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import ApiKeyModal from '../../components/ApiKeyModal/ApiKeyModal'; 
 import { validateCNPJ } from '../../utils/validator'; 

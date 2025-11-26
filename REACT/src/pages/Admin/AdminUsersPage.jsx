@@ -1,7 +1,7 @@
 // src/pages/Admin/AdminUsersPage.jsx
 import React, { useState } from 'react'; // Removido useEffect, useCallback
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Importa hooks
-import { fetchAllUsers, updateUserRole, deleteUser, createUser } from '../../services/api';
+import { fetchAllUsers, updateUserRole, deleteUser, createUser } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useAuth } from '../../context/AuthContext';
 import Spinner from '../../components/Spinner/Spinner';

@@ -2,7 +2,7 @@
 import React from 'react'; // Não precisamos mais do useState
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form'; // <<< Refinamento 6
-import { requestPasswordReset } from '../../services/api';
+import { requestPasswordReset } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import './ForgotPassword.css';
 

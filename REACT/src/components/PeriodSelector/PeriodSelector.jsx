@@ -25,7 +25,9 @@ const PeriodSelector = ({
     disabled = false,
     showDuration = true 
 }) => {
-    console.log('[PeriodSelector] Props recebidas:', { value, errors, disabled });
+    if (import.meta.env.DEV) {
+        console.log('[PeriodSelector] Props recebidas:', { value, errors, disabled });
+    }
     
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -89,7 +91,9 @@ const PeriodSelector = ({
 
     const handlePeriodTypeChange = (e) => {
         const newType = e.target.value;
-        console.log('[PeriodSelector] Mudando tipo de período:', newType);
+        if (import.meta.env.DEV) {
+            console.log('[PeriodSelector] Mudando tipo de período:', newType);
+        }
         setSelectedPeriodType(newType);
         
         // Limpar seleções ao trocar de tipo
@@ -99,23 +103,31 @@ const PeriodSelector = ({
     };
 
     const handleBiWeekToggle = (biWeekId) => {
-        console.log('[PeriodSelector] handleBiWeekToggle chamado:', biWeekId);
+        if (import.meta.env.DEV) {
+            console.log('[PeriodSelector] handleBiWeekToggle chamado:', biWeekId);
+        }
         setSelectedBiWeeks(prev => {
             const newSelection = prev.includes(biWeekId)
                 ? prev.filter(id => id !== biWeekId)
                 : [...prev, biWeekId].sort();
-            console.log('[PeriodSelector] Nova seleção:', newSelection);
+            if (import.meta.env.DEV) {
+                console.log('[PeriodSelector] Nova seleção:', newSelection);
+            }
             return newSelection;
         });
     };
 
     const handleSelectAllBiWeeks = () => {
-        console.log('[PeriodSelector] handleSelectAllBiWeeks chamado');
+        if (import.meta.env.DEV) {
+            console.log('[PeriodSelector] handleSelectAllBiWeeks chamado');
+        }
         setSelectedBiWeeks(prev => {
             const newSelection = prev.length === biWeeks.length
                 ? []
                 : biWeeks.map(bw => bw.bi_week_id);
-            console.log('[PeriodSelector] Selecionar todas:', newSelection);
+            if (import.meta.env.DEV) {
+                console.log('[PeriodSelector] Selecionar todas:', newSelection);
+            }
             return newSelection;
         });
     };

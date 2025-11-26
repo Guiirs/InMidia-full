@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchPlacaById, addPlaca, updatePlaca, fetchRegioes } from '../../services/api';
+import { fetchPlacaById, addPlaca, updatePlaca, fetchRegioes } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import Spinner from '../../components/Spinner/Spinner';
 import { getImageUrl } from '../../utils/helpers';

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 // 1. Importar hooks do React Query
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchUserData, updateUserData } from '../../services/api';
+import { fetchUserData, updateUserData } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import Spinner from '../../components/Spinner/Spinner';

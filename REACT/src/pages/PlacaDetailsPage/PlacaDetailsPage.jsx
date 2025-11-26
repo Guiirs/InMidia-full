@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'; // Removido useCallback
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Importa hooks
-import { fetchPlacaById, fetchClientes, createAluguel } from '../../services/api';
+import { fetchPlacaById, fetchClientes, createAluguel } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import Spinner from '../../components/Spinner/Spinner';
 import Modal from '../../components/Modal/Modal';

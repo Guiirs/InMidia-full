@@ -1,6 +1,7 @@
 // src/components/PIModalForm/Pages/Page3Valores.jsx
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useCurrencyInput } from '../../../hooks/useCurrencyInput';
 
 // --- Helpers (Específicos deste componente) ---
 
@@ -37,12 +38,6 @@ function calcularDataFim(inicio, tipoPeriodo) {
     
     return data.toISOString().split('T')[0];
 }
-
-// Helper para formatar BRL
-function formatCurrency(value) {
-    if (isNaN(value)) value = 0;
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
 // --- Fim Helpers ---
 
 
@@ -57,6 +52,17 @@ export default function Page3Valores({
     
     const tipoPeriodo = watch('tipoPeriodo');
 
+    // Hooks para inputs monetários
+    const valorTotal = useCurrencyInput(
+        watch('valorTotal') || 0,
+        (value) => setValue('valorTotal', value, { shouldValidate: true })
+    );
+    
+    const valorProducao = useCurrencyInput(
+        watch('valorProducao') || 0,
+        (value) => setValue('valorProducao', value, { shouldValidate: true })
+    );
+
     // Efeito para calcular e definir a data final automaticamente
     useEffect(() => {
         if (tipoPeriodo !== 'outro') {
@@ -66,27 +72,6 @@ export default function Page3Valores({
              setValue('dataFim', '', { shouldValidate: true }); // Limpa se for 'outro'
         }
     }, [dataInicio, tipoPeriodo, setValue]);
-    
-    // Efeito para formatar o valor monetário ao digitar
-    const handleValorChange = (e) => {
-        let value = e.target.value;
-        value = value.replace(/\D/g, ''); // Remove tudo que não for dígito
-        
-        if (value === '') {
-             setValue('valorTotal', 0, { shouldValidate: true });
-             e.target.value = ''; // Limpa o campo visual
-             return;
-        }
-
-        const numericValue = parseInt(value, 10) / 100;
-        setValue('valorTotal', numericValue, { shouldValidate: true });
-        
-        // Atualiza o valor visual no input
-        e.target.value = formatCurrency(numericValue);
-    };
-
-    // Pega o valor formatado do RHF para exibir
-    const valorTotalFormatado = formatCurrency(watch('valorTotal') || 0);
 
     return (
         <>
@@ -140,20 +125,20 @@ export default function Page3Valores({
             <div className="modal-form__input-group">
                 <label htmlFor="valorTotal">Valor Total (R$)</label>
                 <input
-                    type="text" // Usamos 'text' para a máscara
+                    type="text"
                     id="valorTotal"
                     className={`modal-form__input ${errors.valorTotal ? 'modal-form__input--error' : ''}`}
                     placeholder="R$ 0,00"
-                    // Registra o campo, mas o 'onChange' será customizado
+                    value={valorTotal.displayValue}
+                    onChange={valorTotal.handleChange}
+                    disabled={isSubmitting}
+                />
+                <input
+                    type="hidden"
                     {...register('valorTotal', { 
                         valueAsNumber: true,
                         validate: value => (value > 0) || 'O valor deve ser maior que zero.' 
                     })}
-                    // Usa o 'defaultValue' para o valor formatado
-                    defaultValue={valorTotalFormatado === 'R$ 0,00' ? '' : valorTotalFormatado}
-                    onInput={handleValorChange} // Usa onInput para melhor controle
-                    onBlur={handleValorChange} // Garante a formatação ao sair
-                    disabled={isSubmitting}
                 />
                 {errors.valorTotal && <div className="modal-form__error-message">{errors.valorTotal.message}</div>}
             </div>
@@ -212,34 +197,16 @@ export default function Page3Valores({
                     id="valorProducao"
                     className={`modal-form__input ${errors.valorProducao ? 'modal-form__input--error' : ''}`}
                     placeholder="R$ 0,00"
+                    value={valorProducao.displayValue}
+                    onChange={valorProducao.handleChange}
+                    disabled={isSubmitting}
+                />
+                <input
+                    type="hidden"
                     {...register('valorProducao', { 
                         valueAsNumber: true,
                         validate: value => (value >= 0) || 'O valor não pode ser negativo.' 
                     })}
-                    defaultValue={formatCurrency(watch('valorProducao') || 0)}
-                    onInput={(e) => {
-                        let value = e.target.value.replace(/\D/g, '');
-                        if (value === '') {
-                            setValue('valorProducao', 0, { shouldValidate: true });
-                            e.target.value = '';
-                            return;
-                        }
-                        const numericValue = parseInt(value, 10) / 100;
-                        setValue('valorProducao', numericValue, { shouldValidate: true });
-                        e.target.value = formatCurrency(numericValue);
-                    }}
-                    onBlur={(e) => {
-                        let value = e.target.value.replace(/\D/g, '');
-                        if (value === '') {
-                            setValue('valorProducao', 0, { shouldValidate: true });
-                            e.target.value = '';
-                            return;
-                        }
-                        const numericValue = parseInt(value, 10) / 100;
-                        setValue('valorProducao', numericValue, { shouldValidate: true });
-                        e.target.value = formatCurrency(numericValue);
-                    }}
-                    disabled={isSubmitting}
                 />
                 {errors.valorProducao && <div className="modal-form__error-message">{errors.valorProducao.message}</div>}
                 <small style={{ color: '#666', fontSize: '0.85rem' }}>Separado do valor de veiculação</small>

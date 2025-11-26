@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchEmpresaData, regenerateApiKey } from '../../../services/api';
+import { fetchEmpresaData, regenerateApiKey } from '../../../services';
 import { useToast } from '../../../components/ToastNotification/ToastNotification';
 import Spinner from '../../../components/Spinner/Spinner';
 import Modal from '../../../components/Modal/Modal';

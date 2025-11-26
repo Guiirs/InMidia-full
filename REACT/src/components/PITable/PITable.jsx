@@ -9,7 +9,7 @@ import { useToast } from '../ToastNotification/ToastNotification';
 import {
     downloadPI_PDF,
     // createContrato, // Removido, pois é tratado pela PIsPage
-} from '../../services/api';
+} from '../../services';
 import { handleDownload } from '../../utils/helpers';
 import Spinner from '../Spinner/Spinner';
 

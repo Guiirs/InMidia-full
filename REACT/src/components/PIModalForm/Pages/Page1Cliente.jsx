@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
-import { fetchClientes } from '../../../services/api';
+import { fetchClientes } from '../../../services';
 import Spinner from '../../Spinner/Spinner';
 import PeriodSelector from '../../PeriodSelector/PeriodSelector'; // [PERÍODO UNIFICADO]
 

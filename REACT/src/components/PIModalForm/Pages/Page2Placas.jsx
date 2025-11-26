@@ -3,7 +3,7 @@ import React, { useMemo, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useController } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { fetchRegioes, fetchPlacas, fetchPlacasDisponiveis } from '../../../services/api';
+import { fetchRegioes, fetchPlacas, fetchPlacasDisponiveis } from '../../../services';
 import Spinner from '../../Spinner/Spinner';
 import '../css/PlacaSelector.css';
 import PlacaSelectItem from './components/PlacaSelectItem';
@@ -41,8 +41,13 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
     });
 
     const { data: allPlacasData = [], isLoading: isLoadingAllPlacas } = useQuery({
-        queryKey: ALL_PLACAS_KEY,
-        queryFn: () => fetchPlacas(new URLSearchParams({ limit: 10000 })),
+        queryKey: ['placas', selectedRegiao, debouncedPlacaSearch],
+        queryFn: () => {
+            const params = new URLSearchParams();
+            if (selectedRegiao) params.append('regiao', selectedRegiao);
+            if (debouncedPlacaSearch) params.append('search', debouncedPlacaSearch);
+            return fetchPlacas(params);
+        },
         staleTime: 1000 * 60 * 10,
         select: data => data.data ?? []
     });

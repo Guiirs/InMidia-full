@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'; //
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'; //
 import L from 'leaflet';
-import { fetchPlacaLocations } from '../../services/api'; //
+import { fetchPlacaLocations } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification'; //
 import Spinner from '../../components/Spinner/Spinner'; //
 import './Map.css'; //

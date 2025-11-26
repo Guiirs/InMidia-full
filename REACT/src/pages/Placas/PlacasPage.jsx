@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // *** 🐞 CORREÇÃO: Corrigido 'fetchRegiões' para 'fetchRegioes' (sem acento) ***
-import { fetchPlacas, deletePlaca, togglePlacaDisponibilidade, fetchRegioes } from '../../services/api';
+import { fetchPlacas, deletePlaca, togglePlacaDisponibilidade, fetchRegioes } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
 import PlacaCard from '../../components/PlacaCard/PlacaCard';

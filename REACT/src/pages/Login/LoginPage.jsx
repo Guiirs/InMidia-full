@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form'; // <<< Refinamento 6
 import { useAuth } from '../../context/AuthContext';
-import { loginUser } from '../../services/api';
+import { loginUser } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import './Login.css'; // Importa o CSS da pasta
 
