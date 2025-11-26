@@ -5,7 +5,7 @@
  * Usado em formulários de Aluguel e PI
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBiWeeksCalendar } from '../../services/biWeekService';
@@ -25,10 +25,6 @@ const PeriodSelector = ({
     disabled = false,
     showDuration = true 
 }) => {
-    if (import.meta.env.DEV) {
-        console.log('[PeriodSelector] Props recebidas:', { value, errors, disabled });
-    }
-    
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
     const [selectedPeriodType, setSelectedPeriodType] = useState(
@@ -37,6 +33,10 @@ const PeriodSelector = ({
     const [selectedBiWeeks, setSelectedBiWeeks] = useState(value?.biWeekIds || []);
     const [startDate, setStartDate] = useState(value?.startDate || '');
     const [endDate, setEndDate] = useState(value?.endDate || '');
+    
+    // Ref para evitar loops infinitos
+    const isInternalChange = useRef(false);
+    const previousPeriodData = useRef(null);
 
     // Buscar bi-semanas disponíveis
     const { data: biWeeks = [], isLoading } = useQuery({
@@ -48,12 +48,13 @@ const PeriodSelector = ({
 
     // Sincronizar com valor externo
     useEffect(() => {
-        if (value) {
+        if (value && !isInternalChange.current) {
             setSelectedPeriodType(value.periodType || PeriodType.CUSTOM);
             setSelectedBiWeeks(value.biWeekIds || []);
             setStartDate(value.startDate || '');
             setEndDate(value.endDate || '');
         }
+        isInternalChange.current = false;
     }, [value]);
 
     // Notificar mudanças
@@ -73,27 +74,42 @@ const PeriodSelector = ({
                 const sortedBiWeeks = [...selected].sort((a, b) => 
                     new Date(a.start_date) - new Date(b.start_date)
                 );
-                periodData.startDate = sortedBiWeeks[0].start_date.split('T')[0];
-                periodData.endDate = sortedBiWeeks[sortedBiWeeks.length - 1].end_date.split('T')[0];
+                const newStartDate = sortedBiWeeks[0].start_date.split('T')[0];
+                const newEndDate = sortedBiWeeks[sortedBiWeeks.length - 1].end_date.split('T')[0];
                 
                 // Atualiza apenas se mudou
-                if (startDate !== periodData.startDate || endDate !== periodData.endDate) {
-                    setStartDate(periodData.startDate);
-                    setEndDate(periodData.endDate);
+                if (startDate !== newStartDate || endDate !== newEndDate) {
+                    setStartDate(newStartDate);
+                    setEndDate(newEndDate);
+                    return; // Aguarda próximo render para chamar onChange
                 }
+                
+                periodData.startDate = newStartDate;
+                periodData.endDate = newEndDate;
             }
         }
 
-        // Chama onChange apenas se houver mudanças reais
+        // Verificar se houve mudança real comparando com valor anterior
+        const prevData = previousPeriodData.current;
+        const hasChanged = !prevData || 
+            prevData.periodType !== periodData.periodType ||
+            prevData.startDate !== periodData.startDate ||
+            prevData.endDate !== periodData.endDate ||
+            JSON.stringify(prevData.biWeekIds) !== JSON.stringify(periodData.biWeekIds);
+
+        if (!hasChanged) {
+            return; // Não chama onChange se nada mudou
+        }
+
+        // Atualiza referência e chama onChange
+        previousPeriodData.current = periodData;
+        isInternalChange.current = true;
         onChange(periodData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedPeriodType, selectedBiWeeks, startDate, endDate, biWeeks]);
 
     const handlePeriodTypeChange = (e) => {
         const newType = e.target.value;
-        if (import.meta.env.DEV) {
-            console.log('[PeriodSelector] Mudando tipo de período:', newType);
-        }
         setSelectedPeriodType(newType);
         
         // Limpar seleções ao trocar de tipo
@@ -103,31 +119,19 @@ const PeriodSelector = ({
     };
 
     const handleBiWeekToggle = (biWeekId) => {
-        if (import.meta.env.DEV) {
-            console.log('[PeriodSelector] handleBiWeekToggle chamado:', biWeekId);
-        }
         setSelectedBiWeeks(prev => {
             const newSelection = prev.includes(biWeekId)
                 ? prev.filter(id => id !== biWeekId)
                 : [...prev, biWeekId].sort();
-            if (import.meta.env.DEV) {
-                console.log('[PeriodSelector] Nova seleção:', newSelection);
-            }
             return newSelection;
         });
     };
 
     const handleSelectAllBiWeeks = () => {
-        if (import.meta.env.DEV) {
-            console.log('[PeriodSelector] handleSelectAllBiWeeks chamado');
-        }
         setSelectedBiWeeks(prev => {
             const newSelection = prev.length === biWeeks.length
                 ? []
                 : biWeeks.map(bw => bw.bi_week_id);
-            if (import.meta.env.DEV) {
-                console.log('[PeriodSelector] Selecionar todas:', newSelection);
-            }
             return newSelection;
         });
     };

@@ -183,16 +183,36 @@ export const usePIFormLogic = (onSubmit, initialData = {}, isSubmitting = false)
 
     const nextStep = async () => {
         let fieldsToValidate = null;
-        // [PERÍODO UNIFICADO] Valida period ao invés de dataInicio/dataFim
-        if (currentStep === 1) fieldsToValidate = ['clienteId', 'descricao', 'period'];
-        if (currentStep === 2) fieldsToValidate = ['placas'];
+        
+        // Validação por etapa
+        if (currentStep === 1) {
+            // Etapa 1: Cliente e Descrição
+            fieldsToValidate = ['clienteId', 'descricao'];
+        }
+        if (currentStep === 2) {
+            // Etapa 2: Período (Datas/Bi-semanas)
+            fieldsToValidate = ['period'];
+        }
+        if (currentStep === 3) {
+            // Etapa 3: Placas
+            fieldsToValidate = ['placas'];
+        }
 
         if (fieldsToValidate) {
             const ok = await trigger(fieldsToValidate);
-            if (!ok) return;
+            if (!ok) {
+                if (import.meta.env.DEV) {
+                    console.log('[usePIFormLogic] Validation failed for step', currentStep, fieldsToValidate);
+                }
+                return;
+            }
         }
 
-        setCurrentStep(s => Math.min(3, s + 1));
+        if (import.meta.env.DEV) {
+            console.log('[usePIFormLogic] Moving to next step from', currentStep, 'to', currentStep + 1);
+        }
+
+        setCurrentStep(s => Math.min(4, s + 1));
     };
 
     const prevStep = () => setCurrentStep(s => Math.max(1, s - 1));

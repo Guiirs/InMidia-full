@@ -66,10 +66,14 @@ function PlacasPage() {
 
   // --- Contadores de Status ---
   const statusCounts = useMemo(() => {
-    const counts = { disponiveis: 0, alugadas: 0, manutencao: 0 };
+    const counts = { disponiveis: 0, alugadas: 0, reservadas: 0, manutencao: 0 };
     placas.forEach(placa => {
-      if (placa.cliente_nome && placa.aluguel_data_fim) {
-        counts.alugadas++;
+      if (placa.aluguel_ativo) {
+        if (placa.aluguel_futuro) {
+          counts.reservadas++;
+        } else {
+          counts.alugadas++;
+        }
       } else if (!placa.disponivel) {
         counts.manutencao++;
       } else {
@@ -289,6 +293,11 @@ function PlacasPage() {
             <i className="fas fa-user-tie"></i>
             <span className="placas-page__status-count">{statusCounts.alugadas}</span>
             <span className="placas-page__status-label">Alugada{statusCounts.alugadas !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="placas-page__status-item placas-page__status-item--reservada">
+            <i className="fas fa-calendar-check"></i>
+            <span className="placas-page__status-count">{statusCounts.reservadas}</span>
+            <span className="placas-page__status-label">Reservada{statusCounts.reservadas !== 1 ? 's' : ''}</span>
           </div>
           <div className="placas-page__status-item placas-page__status-item--manutencao">
             <i className="fas fa-tools"></i>

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import { usePIFormLogic } from './system/usePIFormLogic';
 import Page1Cliente from './Pages/Page1Cliente';
+import PagePeriodo from './Pages/PagePeriodo';
 import Page2Placas from './Pages/Page2Placas';
 import Page3Valores from './Pages/Page3Valores';
 
@@ -29,10 +30,14 @@ function PIModalForm({ onSubmit, onClose, isSubmitting, initialData = {} }) {
                 </div>
                 <div className={`pi-form-step ${currentStep === 2 ? 'active' : (currentStep > 2 ? 'completed' : '')}`}>
                     <div className="pi-form-step__bubble">2</div>
+                    <span>Período</span>
+                </div>
+                <div className={`pi-form-step ${currentStep === 3 ? 'active' : (currentStep > 3 ? 'completed' : '')}`}>
+                    <div className="pi-form-step__bubble">3</div>
                     <span>Placas</span>
                 </div>
-                <div className={`pi-form-step ${currentStep === 3 ? 'active' : ''}`}>
-                    <div className="pi-form-step__bubble">3</div>
+                <div className={`pi-form-step ${currentStep === 4 ? 'active' : ''}`}>
+                    <div className="pi-form-step__bubble">4</div>
                     <span>Valores</span>
                 </div>
             </div>
@@ -46,11 +51,20 @@ function PIModalForm({ onSubmit, onClose, isSubmitting, initialData = {} }) {
                         watchedClienteId={watchedValues.watchedClienteId}
                         setValue={formControls.setValue}
                         watch={formControls.watch}
-                        control={formControls.control}
                     />
                 )}
 
                 {currentStep === 2 && (
+                    <PagePeriodo
+                        control={formControls.control}
+                        setValue={formControls.setValue}
+                        watch={formControls.watch}
+                        errors={formControls.errors}
+                        isSubmitting={isSubmitting}
+                    />
+                )}
+
+                {currentStep === 3 && (
                     <Page2Placas
                         control={formControls.control}
                         name="placas"
@@ -58,16 +72,15 @@ function PIModalForm({ onSubmit, onClose, isSubmitting, initialData = {} }) {
                         dataFim={watchedValues.dataFim}
                         placaFilters={placaFilters}
                         isSubmitting={isSubmitting}
-                        piId={initialData._id} // Passa o ID da PI quando está editando
+                        piId={initialData._id}
                     />
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 4 && (
                     <Page3Valores
                         register={formControls.register}
                         errors={formControls.errors}
                         isSubmitting={isSubmitting}
-                        dataInicio={watchedValues.dataInicio}
                         setValue={formControls.setValue}
                         watch={formControls.watch}
                     />
@@ -81,11 +94,11 @@ function PIModalForm({ onSubmit, onClose, isSubmitting, initialData = {} }) {
                     <button type="button" className="modal-form__button modal-form__button--cancel" onClick={navigation.prevStep} disabled={isLoading}>Voltar</button>
                 )}
 
-                {currentStep < 3 && (
+                {currentStep < 4 && (
                     <button type="button" className="modal-form__button modal-form__button--confirm" onClick={navigation.nextStep} disabled={isLoading}>Próximo</button>
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 4 && (
                     <button type="submit" className="modal-form__button modal-form__button--confirm" disabled={isLoading}>
                         {isSubmitting ? 'A guardar...' : (initialData._id ? 'Guardar Alterações' : 'Criar PI')}
                     </button>

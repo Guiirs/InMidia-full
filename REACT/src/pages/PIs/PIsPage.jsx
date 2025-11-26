@@ -67,13 +67,21 @@ function PIsPage() {
 
     const createPIMutation = useMutation({
         mutationFn: createPI,
-        onSuccess: (data, vars) => {
+        onSuccess: async (data, vars) => {
+            console.log('🎉 [PIsPage] PI criada com sucesso! Resposta:', data);
             showToast('Proposta criada com sucesso!', 'success');
+            
+            // Invalidate queries - forçar refetch imediato e agressivo
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: [pisQueryKey], exact: false, refetchType: 'all' }),
+                queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'], exact: false, refetchType: 'all' }),
+                queryClient.invalidateQueries({ queryKey: ['placas'], exact: false, refetchType: 'all' }),
+                queryClient.refetchQueries({ queryKey: ['placasDisponiveis'], exact: false, type: 'all' })
+            ]);
+            
+            console.log('✅ [PIsPage] Queries invalidadas após criar PI. ID:', data?._id || data?.id || 'N/A');
+            
             closeModal();
-            // Invalidate queries simplificado
-            queryClient.invalidateQueries({ queryKey: [pisQueryKey] });
-            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-            queryClient.invalidateQueries({ queryKey: ['placas'] });
         },
         onError: (error, vars, context) => handleApiError(error, context, vars.setModalError)
     });
@@ -83,10 +91,10 @@ function PIsPage() {
         onSuccess: (data, vars) => {
             showToast('Proposta atualizada com sucesso!', 'success');
             closeModal();
-            // Invalidate queries simplificado
-            queryClient.invalidateQueries({ queryKey: [pisQueryKey] });
-            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-            queryClient.invalidateQueries({ queryKey: ['placas'] });
+            // Invalidate queries - usar exact: false para invalidar todas as variações
+            queryClient.invalidateQueries({ queryKey: [pisQueryKey], exact: false });
+            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'], exact: false, refetchType: 'all' });
+            queryClient.invalidateQueries({ queryKey: ['placas'], exact: false });
         },
         onError: (error, vars, context) => handleApiError(error, context, vars.setModalError)
     });
@@ -105,10 +113,10 @@ function PIsPage() {
         mutationFn: deletePI,
         onSuccess: () => {
             showToast('Proposta apagada com sucesso!', 'success');
-            // Invalidate queries simplificado
-            queryClient.invalidateQueries({ queryKey: [pisQueryKey] });
-            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'] });
-            queryClient.invalidateQueries({ queryKey: ['placas'] });
+            // Invalidate queries - usar exact: false para invalidar todas as variações
+            queryClient.invalidateQueries({ queryKey: [pisQueryKey], exact: false });
+            queryClient.invalidateQueries({ queryKey: ['placasDisponiveis'], exact: false, refetchType: 'all' });
+            queryClient.invalidateQueries({ queryKey: ['placas'], exact: false });
         },
         onError: (error) => showToast(error.message || 'Erro ao apagar proposta.', 'error')
     });
@@ -148,7 +156,7 @@ function PIsPage() {
 
         // [PERÍODO UNIFICADO] Prepara dados para envio
         const piData = {
-            cliente: data.clienteId, // Backend espera 'cliente' não 'clienteId'
+            clienteId: data.clienteId,
             descricao: data.descricao,
             valorTotal: Number(data.valorTotal),
             formaPagamento: data.formaPagamento,

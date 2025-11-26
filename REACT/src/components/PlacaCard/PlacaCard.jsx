@@ -17,15 +17,21 @@ function getStatusInfo(placa) {
       };
   }
 
-  const { disponivel, cliente_nome, aluguel_data_inicio, aluguel_data_fim, aluguel_ativo } = placa;
+  const { disponivel, cliente_nome, aluguel_data_inicio, aluguel_data_fim, aluguel_ativo, aluguel_futuro } = placa;
   let statusText = '';
   let statusClass = '';
   let clienteInfoHTML = null;
   let toggleButtonDisabled = false;
 
   if (aluguel_ativo && cliente_nome && aluguel_data_inicio && aluguel_data_fim) {
-    statusText = 'Alugada';
-    statusClass = 'placa-card__status--alugada';
+    // Define se é "Reservada" (futuro) ou "Alugada" (ativo agora)
+    if (aluguel_futuro) {
+      statusText = 'Reservada';
+      statusClass = 'placa-card__status--reservada';
+    } else {
+      statusText = 'Alugada';
+      statusClass = 'placa-card__status--alugada';
+    }
     toggleButtonDisabled = true;
     const dataInicioFormatada = formatDate(aluguel_data_inicio);
     const dataFimFormatada = formatDate(aluguel_data_fim);

@@ -3,8 +3,6 @@ import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
 import { fetchClientes } from '../../../services';
-import Spinner from '../../Spinner/Spinner';
-import PeriodSelector from '../../PeriodSelector/PeriodSelector'; // [PERÍODO UNIFICADO]
 
 export default function Page1Cliente({ 
     register, 
@@ -12,8 +10,7 @@ export default function Page1Cliente({
     isSubmitting, 
     watchedClienteId, 
     setValue,
-    watch, // [PERÍODO UNIFICADO] Necessário para PeriodSelector
-    control // [PERÍODO UNIFICADO] Necessário para PeriodSelector
+    watch
 }) {
     
     // --- Lógica de Clientes (Específica desta Página) ---
@@ -80,46 +77,6 @@ export default function Page1Cliente({
                 {errors.descricao && <div className="modal-form__error-message">{errors.descricao.message}</div>}
             </div>
 
-            {/* [PERÍODO UNIFICADO] PeriodSelector substitui inputs de data */}
-            <div className="modal-form__input-group modal-form__input-group--full">
-                <label>Período</label>
-                <input type="hidden" {...register('period', {
-                    required: 'O período é obrigatório',
-                    validate: (value) => {
-                        if (!value) return 'O período é obrigatório';
-                        if (!value.startDate || !value.endDate) {
-                            return 'Selecione as datas de início e fim';
-                        }
-                        if (value.periodType === 'bi-week' && (!value.biWeekIds || value.biWeekIds.length === 0)) {
-                            return 'Selecione pelo menos uma bi-semana';
-                        }
-                        return true;
-                    }
-                })} />
-                <PeriodSelector
-                    value={watch('period')}
-                    onChange={(newPeriod) => {
-                        console.log('[Page1Cliente] PeriodSelector onChange:', newPeriod);
-                        setValue('period', newPeriod, { shouldValidate: true });
-                        // Mantém compatibilidade com campos legado para backend durante transição
-                        if (newPeriod) {
-                            setValue('periodType', newPeriod.periodType);
-                            setValue('startDate', newPeriod.startDate);
-                            setValue('endDate', newPeriod.endDate);
-                            setValue('biWeekIds', newPeriod.biWeekIds);
-                            // Campos legado
-                            setValue('dataInicio', newPeriod.startDate);
-                            setValue('dataFim', newPeriod.endDate);
-                            setValue('tipoPeriodo', newPeriod.periodType === 'bi-week' ? 'quinzenal' : 'customizado');
-                        }
-                    }}
-                    errors={errors.period ? { periodType: errors.period.message } : {}}
-                    disabled={isLoading}
-                    showDuration={true}
-                />
-                {errors.period && <div className="modal-form__error-message">{errors.period.message}</div>}
-            </div>
-
             {/* Inputs Responsável e Segmento (Auto-preenchidos) */}
             <div className="modal-form__input-group">
                 <label htmlFor="responsavel">Responsável (do Cliente)</label>
@@ -128,11 +85,10 @@ export default function Page1Cliente({
                     id="responsavel"
                     className="modal-form__input"
                     {...register('responsavel')}
-                    disabled // Este campo é apenas leitura
+                    disabled
                     readOnly 
                 />
             </div>
-            
             <div className="modal-form__input-group">
                 <label htmlFor="segmento">Segmento (do Cliente)</label>
                 <input
@@ -140,7 +96,7 @@ export default function Page1Cliente({
                     id="segmento"
                     className="modal-form__input"
                     {...register('segmento')}
-                    disabled // Este campo é apenas leitura
+                    disabled
                     readOnly
                 />
             </div>
@@ -154,6 +110,5 @@ Page1Cliente.propTypes = {
     isSubmitting: PropTypes.bool.isRequired,
     watchedClienteId: PropTypes.string,
     setValue: PropTypes.func.isRequired,
-    watch: PropTypes.func.isRequired, // [PERÍODO UNIFICADO]
-    control: PropTypes.object.isRequired, // [PERÍODO UNIFICADO]
+    watch: PropTypes.func.isRequired,
 };

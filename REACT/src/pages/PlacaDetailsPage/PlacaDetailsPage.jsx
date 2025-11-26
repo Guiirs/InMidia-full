@@ -158,9 +158,23 @@ function PlacaDetailsPage() {
     return <div className="placa-details-page"><p>Placa não encontrada.</p></div>;
   }
 
-  // Calcula status e URLs
-  const statusText = placa.disponivel ? 'Disponível' : (placa.cliente_nome ? 'Alugada' : 'Em Manutenção');
-  const statusClass = placa.disponivel ? 'placa-details-page__status--disponivel' : 'placa-details-page__status--indisponivel';
+  // Calcula status com base em aluguel_ativo e aluguel_futuro
+  let statusText = 'Disponível';
+  let statusClass = 'placa-details-page__status--disponivel';
+  
+  if (placa.aluguel_ativo) {
+    if (placa.aluguel_futuro) {
+      statusText = 'Reservada';
+      statusClass = 'placa-details-page__status--reservada';
+    } else {
+      statusText = 'Alugada';
+      statusClass = 'placa-details-page__status--indisponivel';
+    }
+  } else if (!placa.disponivel) {
+    statusText = 'Em Manutenção';
+    statusClass = 'placa-details-page__status--manutencao';
+  }
+  
   const placeholderUrl = '/assets/img/placeholder.png';
   const imageUrl = getImageUrl(placa.imagem, placeholderUrl);
   const mapPosition = placa.coordenadas?.split(',').map(Number).filter(n => !isNaN(n));

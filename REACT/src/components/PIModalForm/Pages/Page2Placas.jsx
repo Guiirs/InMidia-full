@@ -62,19 +62,31 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
             const params = new URLSearchParams({ dataInicio, dataFim });
             if (selectedRegiao) params.append('regiao', selectedRegiao);
             if (debouncedPlacaSearch) params.append('search', debouncedPlacaSearch);
-            if (piId) params.append('excludePiId', piId); // Exclui a PI atual quando editando
+            if (piId) params.append('excludePiId', piId);
             
-            dbg('Fetching placas disponíveis com params:', { dataInicio, dataFim, selectedRegiao, debouncedPlacaSearch, piId });
+            console.log('🔍 [Page2Placas] Buscando placas disponíveis:', { 
+                dataInicio, 
+                dataFim, 
+                regiao: selectedRegiao || 'todas',
+                search: debouncedPlacaSearch || 'sem filtro',
+                excludePiId: piId || 'N/A'
+            });
             
             const response = await fetchPlacasDisponiveis(params);
-            dbg('API Response:', response);
+            
+            console.log('📦 [Page2Placas] API retornou:', {
+                total: response?.data?.length || 0,
+                primeiras: response?.data?.slice(0, 3).map(p => p.numero_placa).join(', ') || 'nenhuma'
+            });
+            
             return response;
         },
         enabled: !!dataInicio && !!dataFim,
-        staleTime: 1000 * 30,
+        staleTime: 0, // Desabilita cache - sempre busca dados frescos
+        gcTime: 0, // Limpa cache imediatamente
         select: data => {
             const result = data.data ?? [];
-            dbg('Placas disponíveis selecionadas:', result.length);
+            console.log('✅ [Page2Placas] Placas selecionadas do cache:', result.length);
             return result;
         }
     });
