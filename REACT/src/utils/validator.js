@@ -11,10 +11,10 @@ export const validatePassword = (password) => minLength(password, 6); // Alias
 // --- Validações Específicas ---
 
 /**
- * Valida um CNPJ (formato e dígitos repetidos).
- * ATENÇÃO: Não inclui validação dos dígitos verificadores.
+ * Valida um CNPJ completo (formato, dígitos repetidos e dígitos verificadores).
+ * Implementa o algoritmo oficial de validação de CNPJ usando módulo 11.
  * @param {string} cnpj - O CNPJ a validar.
- * @returns {boolean} - True se o formato for válido e não tiver todos os dígitos repetidos.
+ * @returns {boolean} - True se o CNPJ for matematicamente válido.
  */
 export const validateCNPJ = (cnpj) => {
     if (!cnpj) return false;
@@ -26,9 +26,33 @@ export const validateCNPJ = (cnpj) => {
     // Verifica se todos os dígitos são iguais (ex: 00.000.000/0000-00) - CNPJs inválidos
     if (/^(\d)\1+$/.test(cleaned)) return false;
 
-    // Validação completa dos dígitos verificadores é mais complexa e
-    // pode exigir uma biblioteca ou implementação detalhada.
-    // Para este exemplo, validamos apenas formato e repetição.
+    // Validação dos dígitos verificadores (algoritmo oficial)
+    let tamanho = cleaned.length - 2;
+    let numeros = cleaned.substring(0, tamanho);
+    const digitos = cleaned.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+
+    // Calcula o primeiro dígito verificador
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(0)) return false;
+
+    // Calcula o segundo dígito verificador
+    tamanho = tamanho + 1;
+    numeros = cleaned.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(1)) return false;
+
     return true;
 };
 

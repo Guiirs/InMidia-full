@@ -25,15 +25,25 @@ export default function Page1Cliente({
     });
 
     // Efeito para auto-preencher campos quando o cliente muda
+    // Correção: Só preenche se o campo estiver vazio (não sobrescreve input manual do usuário)
     useEffect(() => {
         if (watchedClienteId) {
             const clienteSelecionado = clientes.find(c => c._id === watchedClienteId);
             if (clienteSelecionado) {
-                setValue('responsavel', clienteSelecionado.responsavel || '', { shouldValidate: false });
-                setValue('segmento', clienteSelecionado.segmento || '', { shouldValidate: false });
+                // Só preenche 'responsavel' se estiver vazio
+                const currentResponsavel = watch('responsavel');
+                if (!currentResponsavel || currentResponsavel.trim() === '') {
+                    setValue('responsavel', clienteSelecionado.responsavel || '', { shouldValidate: false });
+                }
+                
+                // Só preenche 'segmento' se estiver vazio
+                const currentSegmento = watch('segmento');
+                if (!currentSegmento || currentSegmento.trim() === '') {
+                    setValue('segmento', clienteSelecionado.segmento || '', { shouldValidate: false });
+                }
             }
         }
-    }, [watchedClienteId, clientes, setValue]);
+    }, [watchedClienteId, clientes, setValue, watch]);
 
     const isLoading = isSubmitting || isLoadingClientes;
 

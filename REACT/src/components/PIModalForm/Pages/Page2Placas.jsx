@@ -220,13 +220,38 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
             </div>
 
             <div className="pi-selector__list-container" style={{ position: 'relative' }}>
-                {(isLoading || isFetchingDisponiveis) && (
-                    <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 20, pointerEvents: 'none' }}>
-                        <Spinner message="A filtrar placas..." />
+                {/* Indicador visual de revalidação em background */}
+                {isFetchingDisponiveis && !isLoadingDisponiveis && (
+                    <div style={{ 
+                        position: 'absolute', 
+                        top: 8, 
+                        right: 8, 
+                        zIndex: 20, 
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.85rem',
+                        color: '#666'
+                    }}>
+                        <i className="fas fa-sync fa-spin" style={{ fontSize: '12px' }}></i>
+                        <span>Atualizando...</span>
                     </div>
                 )}
 
-                <div className="pi-selector__list">
+                {isLoading && (
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20 }}>
+                        <Spinner message="A carregar placas..." />
+                    </div>
+                )}
+
+                <div className="pi-selector__list" style={{ 
+                    opacity: isFetchingDisponiveis ? 0.7 : 1,
+                    transition: 'opacity 0.3s ease'
+                }}>
                     <h4 id="placas-disponiveis-heading">Placas Disponíveis ({placasDisponiveisFiltradas.length})</h4>
                     {placasDisponiveisFiltradas.length > 0 ? (
                         <ul>

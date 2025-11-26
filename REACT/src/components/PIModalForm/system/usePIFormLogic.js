@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { PERIOD_TYPES } from '../../../constants/periodos';
 
 function formatDateForInput(isoDate) {
     if (!isoDate) return '';
@@ -9,7 +10,7 @@ function formatDateForInput(isoDate) {
 }
 
 // Helper para calcular dataFim baseado no tipoPeriodo e dataInicio
-function calcularDataFimInicial(inicio, tipoPeriodo = 'mensal') {
+function calcularDataFimInicial(inicio, tipoPeriodo = PERIOD_TYPES.MENSAL) {
     if (!inicio) {
         // Se não houver dataInicio, calcula para 1 mês a partir de hoje
         const hoje = new Date();
@@ -22,24 +23,24 @@ function calcularDataFimInicial(inicio, tipoPeriodo = 'mensal') {
     const data = new Date(inicio + 'T12:00:00');
     
     switch (tipoPeriodo) {
-        case 'quinzenal':
+        case PERIOD_TYPES.QUINZENAL:
             data.setDate(data.getDate() + 14);
             break;
-        case 'mensal':
+        case PERIOD_TYPES.MENSAL:
             // Vai para o próximo mês, mesmo dia
             data.setMonth(data.getMonth() + 1);
             // Volta 1 dia (último dia do mês atual)
             data.setDate(data.getDate() - 1);
             break;
-        case 'bimestral':
+        case PERIOD_TYPES.BIMESTRAL:
             data.setMonth(data.getMonth() + 2);
             data.setDate(data.getDate() - 1);
             break;
-        case 'semestral':
+        case PERIOD_TYPES.SEMESTRAL:
             data.setMonth(data.getMonth() + 6);
             data.setDate(data.getDate() - 1);
             break;
-        case 'anual':
+        case PERIOD_TYPES.ANUAL:
             data.setFullYear(data.getFullYear() + 1);
             data.setDate(data.getDate() - 1);
             break;

@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useCurrencyInput } from '../../../hooks/useCurrencyInput';
+import { PERIOD_TYPES } from '../../../constants/periodos';
 
 // --- Helpers (Específicos deste componente) ---
 
@@ -13,22 +14,22 @@ function calcularDataFim(inicio, tipoPeriodo) {
     const data = new Date(inicio + 'T00:00:00-03:00'); 
     
     switch (tipoPeriodo) {
-        case 'quinzenal':
+        case PERIOD_TYPES.QUINZENAL:
             data.setDate(data.getDate() + 14); // 15 dias (14 noites)
             break;
-        case 'mensal':
+        case PERIOD_TYPES.MENSAL:
             data.setMonth(data.getMonth() + 1);
             data.setDate(data.getDate() - 1); // Ajusta para o dia anterior
             break;
-        case 'bimestral':
+        case PERIOD_TYPES.BIMESTRAL:
             data.setMonth(data.getMonth() + 2);
             data.setDate(data.getDate() - 1);
             break;
-        case 'semestral':
+        case PERIOD_TYPES.SEMESTRAL:
             data.setMonth(data.getMonth() + 6);
             data.setDate(data.getDate() - 1);
             break;
-        case 'anual':
+        case PERIOD_TYPES.ANUAL:
             data.setFullYear(data.getFullYear() + 1);
             data.setDate(data.getDate() - 1);
             break;
@@ -65,7 +66,7 @@ export default function Page3Valores({
 
     // Efeito para calcular e definir a data final automaticamente
     useEffect(() => {
-        if (tipoPeriodo !== 'outro') {
+        if (tipoPeriodo !== PERIOD_TYPES.OUTRO) {
             const dataFimCalculada = calcularDataFim(dataInicio, tipoPeriodo);
             setValue('dataFim', dataFimCalculada, { shouldValidate: true });
         } else {
@@ -84,12 +85,12 @@ export default function Page3Valores({
                     {...register('tipoPeriodo', { required: 'Selecione o período.' })}
                     disabled={isSubmitting}
                 >
-                    <option value="mensal">Mensal (30 dias)</option>
-                    <option value="quinzenal">Quinzenal (15 dias)</option>
-                    <option value="bimestral">Bimestral (60 dias)</option>
-                    <option value="semestral">Semestral (6 meses)</option>
-                    <option value="anual">Anual (12 meses)</option>
-                    <option value="outro">Outro (Manual)</option>
+                    <option value={PERIOD_TYPES.MENSAL}>Mensal (30 dias)</option>
+                    <option value={PERIOD_TYPES.QUINZENAL}>Quinzenal (15 dias)</option>
+                    <option value={PERIOD_TYPES.BIMESTRAL}>Bimestral (60 dias)</option>
+                    <option value={PERIOD_TYPES.SEMESTRAL}>Semestral (6 meses)</option>
+                    <option value={PERIOD_TYPES.ANUAL}>Anual (12 meses)</option>
+                    <option value={PERIOD_TYPES.OUTRO}>Outro (Manual)</option>
                 </select>
                 {errors.tipoPeriodo && <div className="modal-form__error-message">{errors.tipoPeriodo.message}</div>}
             </div>
@@ -115,8 +116,8 @@ export default function Page3Valores({
                     id="dataFim"
                     className={`modal-form__input ${errors.dataFim ? 'modal-form__input--error' : ''}`}
                     {...register('dataFim', { required: 'A data de fim é obrigatória.' })}
-                    disabled={isSubmitting || tipoPeriodo !== 'outro'} // Desabilita se não for 'outro'
-                    readOnly={tipoPeriodo !== 'outro'}
+                    disabled={isSubmitting || tipoPeriodo !== PERIOD_TYPES.OUTRO} // Desabilita se não for 'outro'
+                    readOnly={tipoPeriodo !== PERIOD_TYPES.OUTRO}
                 />
                 {errors.dataFim && <div className="modal-form__error-message">{errors.dataFim.message}</div>}
             </div>
