@@ -7,31 +7,35 @@ import { ptBR } from 'date-fns/locale';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../ToastNotification/ToastNotification';
 import {
-    downloadPI_PDF,
+    queuePDFJob,
     // createContrato, // Removido, pois é tratado pela PIsPage
 } from '../../services';
-import { handleDownload } from '../../utils/helpers';
 import Spinner from '../Spinner/Spinner';
 
 // O export é 'function', então a importação com { PIsTable } está correta.
-export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGeneratingContrato, processingPIId, onStatusChange }) {
+export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGeneratingContrato, processingPIId, onStatusChange, currentJobStatus, isPolling, onGeneratePDF }) {
     
     const navigate = useNavigate();
     const showToast = useToast();
     const { user } = useAuth();
     
-    const [downloadingId, setDownloadingId] = React.useState(null);
+    const [generatingPDFId, setGeneratingPDFId] = React.useState(null);
     // O 'isGeneratingContrato' agora é uma prop vinda do 'PIsPage'
 
-    const handleDownloadClick = async (piId) => {
-        setDownloadingId(piId);
+    const handleGeneratePDFClick = async (piId) => {
+        setGeneratingPDFId(piId);
         try {
-            const { blob, filename } = await downloadPI_PDF(piId);
-            handleDownload(blob, filename);
+            if (onGeneratePDF) {
+                await onGeneratePDF(piId);
+            } else {
+                // Fallback to direct queue call
+                await queuePDFJob(piId, 'pi');
+                showToast('PDF da PI está sendo gerado e será enviado via WhatsApp...', 'info');
+            }
         } catch (error) {
-            showToast(error.message || 'Erro ao gerar PDF da PI.', 'error');
+            showToast(error.message || 'Erro ao iniciar geração do PDF.', 'error');
         } finally {
-            setDownloadingId(null);
+            setGeneratingPDFId(null);
         }
     };
 
@@ -71,11 +75,13 @@ export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGenerati
                 const isVencida = pi.status === 'vencida';
                 const isConcluida = pi.status === 'concluida';
                 
-                const isThisPIDownloading = downloadingId === pi._id;
+                const isThisPIGeneratingPDF = generatingPDFId === pi._id;
                 // Verifica se *esta* PI é a que está gerando um contrato
                 const isThisPIProcessingContrato = processingPIId === pi._id;
-                // Desabilita botões se CUALQUER download ou geração de contrato estiver ativa
-                const isDisabled = isThisPIDownloading || isGeneratingContrato;
+                // Check if this PI is the current job
+                const isCurrentJob = currentJobStatus && currentJobStatus.piId === pi._id;
+                // Desabilita botões se QUALQUER geração de PDF ou contrato estiver ativa
+                const isDisabled = isThisPIGeneratingPDF || isGeneratingContrato || (isCurrentJob && isPolling);
 
                 return (
                     <tr key={pi._id} className={isVencida ? 'pi-vencida' : ''}>
@@ -87,7 +93,7 @@ export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGenerati
                             </span>
                         </td>
                         <td data-label="Descrição">{pi.descricao}</td>
-                        <td data-label="Cliente">{pi.cliente?.nome || 'Cliente não encontrado'}</td>
+                        <td data-label="Cliente">{pi.clienteId?.nome || 'Cliente não encontrado'}</td>
                         <td data-label="Período">
                             {formatShortDate(pi.dataInicio)} - {formatShortDate(pi.dataFim)}
                         </td>
@@ -118,11 +124,11 @@ export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGenerati
                             
                             <button 
                                 className="table-action-button" 
-                                title="Baixar PDF da PI"
-                                onClick={() => handleDownloadClick(pi._id)}
+                                title={isCurrentJob && isPolling ? `Gerando PDF: ${currentJobStatus.status}` : "Gerar PDF da PI"}
+                                onClick={() => handleGeneratePDFClick(pi._id)}
                                 disabled={isDisabled}
                             >
-                                {isThisPIDownloading ? <Spinner mini /> : <i className="fas fa-file-pdf"></i>}
+                                {isThisPIGeneratingPDF || (isCurrentJob && isPolling) ? <Spinner mini /> : <i className="fas fa-file-pdf"></i>}
                             </button>
 
                             <button 
@@ -149,4 +155,7 @@ PIsTable.propTypes = {
     isGeneratingContrato: PropTypes.bool,
     processingPIId: PropTypes.string, // ID da PI sendo processada
     onStatusChange: PropTypes.func,
+    currentJobStatus: PropTypes.object,
+    isPolling: PropTypes.bool,
+    onGeneratePDF: PropTypes.func,
 };

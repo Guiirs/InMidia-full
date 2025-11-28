@@ -45,3 +45,4 @@ export const updateCliente = async (id, clienteData) => {
 export const deleteCliente = async (id) => {
     await apiClient.delete(`/clientes/${id}`);
 };
+

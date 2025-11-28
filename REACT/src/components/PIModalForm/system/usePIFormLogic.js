@@ -79,7 +79,7 @@ export const usePIFormLogic = (onSubmit, initialData = {}, isSubmitting = false)
     } = useForm({
         mode: 'onBlur',
         defaultValues: {
-            clienteId: initialData.cliente?._id || initialData.cliente || '',
+            clienteId: initialData.clienteIdId?._id || initialData.clienteIdId || '',
             // [PERÍODO UNIFICADO] Campo novo - Prioriza novo formato
             period: initialData.periodType ? {
                 periodType: initialData.periodType,
@@ -113,8 +113,8 @@ export const usePIFormLogic = (onSubmit, initialData = {}, isSubmitting = false)
                 ),
             valorTotal: initialData.valorTotal || 0,
             descricao: initialData.descricao || '',
-            responsavel: initialData.cliente?.responsavel || '',
-            segmento: initialData.cliente?.segmento || '',
+            responsavel: initialData.clienteIdId?.responsavel || '',
+            segmento: initialData.clienteIdId?.segmento || '',
             formaPagamento: initialData.formaPagamento || '',
             placas: initialData.placas?.map(p => p._id || p) || [],
             // Novos campos para PDF compatível com XLSX
@@ -130,7 +130,7 @@ export const usePIFormLogic = (onSubmit, initialData = {}, isSubmitting = false)
 
     useEffect(() => {
         // Sempre que o initialData mudar, reseta o formulário e filtros
-        const cliente = initialData.cliente || {};
+        const clienteId = initialData.clienteIdId || {};
         
         // [PERÍODO UNIFICADO] Prepara dados de período
         const periodData = initialData.periodType ? {
@@ -154,7 +154,7 @@ export const usePIFormLogic = (onSubmit, initialData = {}, isSubmitting = false)
         });
         
         reset({
-            clienteId: cliente._id || initialData.cliente || '',
+            clienteId: cliente._id || initialData.clienteIdId || '',
             period: periodData,
             tipoPeriodo: initialData.tipoPeriodo || 'mensal',
             dataInicio: periodData.startDate,

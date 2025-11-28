@@ -6,7 +6,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import AdminRoute from './components/AdminRoute/AdminRoute.jsx';
 import ToastNotification from './components/ToastNotification/ToastNotification';
+import SessionWarningModal from './components/SessionWarningModal/SessionWarningModal';
 import Spinner from './components/Spinner/Spinner';
+
+// Context
+import { useAuth } from './context/AuthContext';
 
 // --- ALTERAÇÃO AQUI ---
 // Importe os layouts e rotas públicas estaticamente
@@ -45,6 +49,20 @@ const DocsPage = lazy(() => import('./pages/Docs/DocsPage')); // Assumindo que a
 const BiWeeksPage = lazy(() => import('./pages/BiWeeks/BiWeeksPage')); // <-- NOVO: Calendário de Bi-Semanas
 
 function App() {
+  const { sessionWarning, logout } = useAuth();
+
+  const handleRenewSession = () => {
+    // Aqui poderia renovar o token, mas por simplicidade, apenas fechar o modal
+    // Em uma implementação real, faria uma chamada para renovar o token
+    console.log('Renovar sessão');
+    // Por enquanto, apenas fechar o modal
+  };
+
+  const handleDismissWarning = () => {
+    // Fechar o modal sem fazer nada
+    console.log('Ignorar aviso de sessão');
+  };
+
   return (
     <> 
       {/* Suspense agora envolve apenas as rotas que podem ser lazy-loaded */}
@@ -109,6 +127,12 @@ function App() {
       </Routes>
 
       <ToastNotification />
+      {sessionWarning && (
+        <SessionWarningModal 
+          onRenew={handleRenewSession} 
+          onDismiss={handleDismissWarning} 
+        />
+      )}
     </>
   );
 }

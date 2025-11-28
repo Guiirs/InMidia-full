@@ -56,7 +56,7 @@ export default function Page1Cliente({
                     disabled={isLoading}
                 >
                     <option value="">{isLoadingClientes ? 'A carregar clientes...' : 'Selecione um cliente...'}</option>
-                    {clientes.map(cliente => (
+                    {clientes.map(clienteId => (
                         <option key={cliente._id} value={cliente._id}>{cliente.nome}</option>
                     ))}
                 </select>

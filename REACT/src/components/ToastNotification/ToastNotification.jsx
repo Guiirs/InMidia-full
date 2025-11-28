@@ -4,6 +4,15 @@ import './ToastNotification.css'; // Criaremos este CSS
 
 let showToastFunction = null;
 
+// Função global para mostrar toast (para uso em interceptors, etc.)
+export const showToastGlobal = (msg, toastType = 'info') => {
+  if (showToastFunction) {
+    showToastFunction(msg, toastType);
+  } else {
+    console.warn("Toast não está disponível ainda.");
+  }
+};
+
 function ToastNotification() {
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');

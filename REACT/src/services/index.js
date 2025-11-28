@@ -25,5 +25,8 @@ export * from './relatorioService';
 // Admin
 export * from './adminService';
 
+// Queue
+export * from './queueService';
+
 // Cliente HTTP base
 export { default as apiClient } from './apiClient';

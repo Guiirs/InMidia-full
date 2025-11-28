@@ -6,6 +6,7 @@
 
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/config';
+import { showToastGlobal } from '../components/ToastNotification/ToastNotification';
 
 // -----------------------------------------------------------------------------
 // Configuração do Cliente Axios
@@ -56,11 +57,18 @@ apiClient.interceptors.response.use(
 
       // Lógica 401 - Sessão expirada
       if (status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login') {
-           window.location.href = '/login';
-        }
+        // Mostra aviso de sessão expirada
+        showToastGlobal('Sua sessão expirou. Faça login novamente.', 'error');
+        
+        // Pequeno delay para o usuário ver o toast antes de redirecionar
+        setTimeout(() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }, 2000); // 2 segundos
+        
         return Promise.reject(new Error('Sessão expirada. Faça login novamente.'));
       }
       

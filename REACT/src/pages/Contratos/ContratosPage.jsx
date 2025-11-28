@@ -1,14 +1,14 @@
 // src/pages/Contratos/ContratosPage.jsx
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchContratos, updateContrato, deleteContrato, downloadContrato_PDF } from '../../services';
+import { fetchContratos, updateContrato, deleteContrato, queuePDFJob } from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
+import { useJobStatus } from '../../hooks/useJobStatus';
 import Spinner from '../../components/Spinner/Spinner';
 import Modal from '../../components/Modal/Modal';
 import ContratoTable from '../../components/ContratoTable/ContratoTable';
 import ContratoStatusModal from '../../components/ContratoStatusModal/ContratoStatusModal';
-import { saveAs } from 'file-saver';
 import './ContratosPage.css'; // Importa o novo CSS
 
 // Chave da query para o React Query
@@ -19,11 +19,31 @@ function ContratosPage() {
     const [editingContrato, setEditingContrato] = useState(null);
     const [filters, setFilters] = useState({ status: 'todos', clienteId: 'todos' });
     const [currentPage, setCurrentPage] = useState(1);
+    const [currentJobId, setCurrentJobId] = useState(null);
     const ITEMS_PER_PAGE = 10;
 
     const showToast = useToast();
     const showConfirmation = useConfirmation();
     const queryClient = useQueryClient();
+
+    // Job status monitoring
+    const {
+        jobStatus,
+        isPolling,
+        error: jobError,
+        isComplete,
+        isSuccess,
+        isFailed
+    } = useJobStatus(currentJobId, {
+        onComplete: (status) => {
+            showToast('PDF do contrato enviado via WhatsApp!', 'success');
+            setCurrentJobId(null);
+        },
+        onError: (error) => {
+            showToast(`Erro na geração do PDF: ${error}`, 'error');
+            setCurrentJobId(null);
+        }
+    });
 
     // --- Query: Buscar Contratos ---
     const {
@@ -53,7 +73,7 @@ function ContratosPage() {
     // --- Mutações ---
     const [actionState, setActionState] = useState({
         isDeleting: null,
-        isDownloading: null,
+        isGeneratingPDF: null,
     });
 
     // Update (Mudar Status)
@@ -81,16 +101,16 @@ function ContratosPage() {
         onSettled: () => setActionState(s => ({ ...s, isDeleting: null }))
     });
 
-    // Download PDF
-    const downloadContratoMutation = useMutation({
-        mutationFn: downloadContrato_PDF,
-        onMutate: (contratoId) => setActionState(s => ({ ...s, isDownloading: { contratoId } })),
+    // Generate PDF (Queue-based)
+    const generatePDFMutation = useMutation({
+        mutationFn: (contratoId) => queuePDFJob(contratoId, 'contrato'),
+        onMutate: (contratoId) => setActionState(s => ({ ...s, isGeneratingPDF: { contratoId } })),
         onSuccess: (data) => {
-            saveAs(data.blob, data.filename);
-            showToast('Download do contrato iniciado!', 'success');
+            setCurrentJobId(data.jobId);
+            showToast('PDF do contrato está sendo gerado e será enviado via WhatsApp...', 'info');
         },
-        onError: (error) => showToast(error.message || 'Erro ao baixar PDF.', 'error'),
-        onSettled: () => setActionState(s => ({ ...s, isDownloading: null }))
+        onError: (error) => showToast(error.message || 'Erro ao iniciar geração do PDF.', 'error'),
+        onSettled: () => setActionState(s => ({ ...s, isGeneratingPDF: null }))
     });
 
     // --- Handlers ---
@@ -108,7 +128,7 @@ function ContratosPage() {
     const onDeleteClick = async (contrato) => {
         try {
             await showConfirmation({
-                message: `Tem a certeza que deseja apagar o contrato do cliente "${contrato.cliente.nome}"? (Apenas rascunhos podem ser apagados).`,
+                message: `Tem a certeza que deseja apagar o contrato do cliente "${contrato.clienteIdId.nome}"? (Apenas rascunhos podem ser apagados).`,
                 title: "Confirmar Exclusão",
                 confirmButtonType: "red",
             });
@@ -116,8 +136,8 @@ function ContratosPage() {
         } catch (error) { /* Cancelado */ }
     };
 
-    // Download PDF
-    const onDownloadPDF = (contrato) => downloadContratoMutation.mutate(contrato._id);
+    // Generate PDF (Queue-based)
+    const onGeneratePDF = (contrato) => generatePDFMutation.mutate(contrato._id);
 
     // --- Renderização ---
     const colSpan = 7; // Ajuste o número de colunas
@@ -137,9 +157,11 @@ function ContratosPage() {
                 contratos={contratos}
                 onEditStatusClick={openEditModal}
                 onDeleteClick={onDeleteClick}
-                onDownloadPDF={onDownloadPDF}
+                onGeneratePDF={onGeneratePDF}
                 isDeleting={actionState.isDeleting}
-                isDownloading={actionState.isDownloading}
+                isGeneratingPDF={actionState.isGeneratingPDF}
+                currentJobStatus={jobStatus}
+                isPolling={isPolling}
             />
         );
     };

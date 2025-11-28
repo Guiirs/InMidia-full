@@ -1,10 +1,11 @@
 // src/pages/PIs/PIsPage.jsx
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createPI, deletePI, fetchPIs, updatePI, createContrato } from '../../services';
+import { createPI, deletePI, fetchPIs, updatePI, createContrato, queuePDFJob } from '../../services';
 // import { usePlacaFilters } from '../../hooks/usePlacaFilters'; // <-- IMPORT REMOVIDO
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
+import { useJobStatus } from '../../hooks/useJobStatus';
 
 import Modal from '../../components/Modal/Modal';
 import { PIsTable } from '../../components/PITable/PITable';
@@ -21,6 +22,7 @@ function PIsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPI, setEditingPI] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [currentJobId, setCurrentJobId] = useState(null);
     const [filters, setFilters] = useState({
         status: '',
         clienteId: '',
@@ -121,6 +123,35 @@ function PIsPage() {
         onError: (error) => showToast(error.message || 'Erro ao apagar proposta.', 'error')
     });
 
+    // Job status monitoring
+    const {
+        jobStatus,
+        isPolling,
+        error: jobError,
+        isComplete,
+        isSuccess,
+        isFailed
+    } = useJobStatus(currentJobId, {
+        onComplete: (status) => {
+            showToast('PDF da PI enviado via WhatsApp!', 'success');
+            setCurrentJobId(null);
+        },
+        onError: (error) => {
+            showToast(`Erro na geração do PDF: ${error}`, 'error');
+            setCurrentJobId(null);
+        }
+    });
+
+    // Generate PDF (Queue-based)
+    const generatePDFMutation = useMutation({
+        mutationFn: (piId) => queuePDFJob(piId, 'pi'),
+        onSuccess: (data) => {
+            setCurrentJobId(data.jobId);
+            showToast('PDF da PI está sendo gerado e será enviado via WhatsApp...', 'info');
+        },
+        onError: (error) => showToast(error.message || 'Erro ao iniciar geração do PDF.', 'error'),
+    });
+
     // --- Handlers ---
     const openAddModal = () => {
         setEditingPI(null);
@@ -213,6 +244,8 @@ function PIsPage() {
             createContratoMutation.mutate(piId);
         } catch (error) { /* Cancelado */ }
     };
+
+    const onGeneratePDFClick = (piId) => generatePDFMutation.mutate(piId);
     
     const isMutating = createPIMutation.isPending || updatePIMutation.isPending;
     const isGeneratingContrato = createContratoMutation.isPending;
@@ -240,7 +273,17 @@ function PIsPage() {
                                 <th>Valor</th>
                                 <th>Ações</th>
                             </tr>
-                        </thead><PIsTable pis={pis} onEdit={openEditModal} onDelete={onDeleteClick} onGenerateContrato={onGenerateContratoClick} isGeneratingContrato={isGeneratingContrato} processingPIId={createContratoMutation.isPending ? createContratoMutation.variables : null} /></table>
+                        </thead><PIsTable 
+                            pis={pis} 
+                            onEdit={openEditModal} 
+                            onDelete={onDeleteClick} 
+                            onGenerateContrato={onGenerateContratoClick} 
+                            isGeneratingContrato={isGeneratingContrato} 
+                            processingPIId={createContratoMutation.isPending ? createContratoMutation.variables : null}
+                            currentJobStatus={jobStatus}
+                            isPolling={isPolling}
+                            onGeneratePDF={onGeneratePDFClick}
+                        /></table>
                 </div>
             )}
             {/* --- FIM DA CORREÇÃO DE HTML --- */}

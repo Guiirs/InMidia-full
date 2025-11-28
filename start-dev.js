@@ -69,6 +69,7 @@ function startProcess(name, command, args, cwd, color) {
 // Paths
 const backendPath = path.join(__dirname, 'BECKEND');
 const frontendPath = path.join(__dirname, 'REACT');
+const redisPath = path.join(__dirname, 'redis-new');
 
 console.log('\n╔═══════════════════════════════════════════════════════╗');
 console.log('║   INICIANDO AMBIENTE DE DESENVOLVIMENTO               ║');
@@ -86,7 +87,20 @@ if (!fs.existsSync(frontendPath)) {
   process.exit(1);
 }
 
+if (!fs.existsSync(redisPath)) {
+  console.error(`${colors.red}Erro: Diretório redis-new não encontrado!${colors.reset}`);
+  process.exit(1);
+}
+
 // Iniciar processos
+const redis = startProcess(
+  'REDIS',
+  'redis-server.exe',
+  ['redis6380.conf'],
+  redisPath,
+  colors.green
+);
+
 const backend = startProcess(
   'BACKEND',
   'npm',
@@ -108,10 +122,12 @@ process.on('SIGINT', () => {
   console.log('\n');
   log('SYSTEM', 'Encerrando processos...', colors.yellow);
   
+  redis.kill('SIGINT');
   backend.kill('SIGINT');
   frontend.kill('SIGINT');
   
   setTimeout(() => {
+    redis.kill('SIGKILL');
     backend.kill('SIGKILL');
     frontend.kill('SIGKILL');
     process.exit(0);
@@ -119,6 +135,7 @@ process.on('SIGINT', () => {
 });
 
 process.on('SIGTERM', () => {
+  redis.kill('SIGTERM');
   backend.kill('SIGTERM');
   frontend.kill('SIGTERM');
   process.exit(0);
@@ -129,7 +146,8 @@ setTimeout(() => {
   console.log('\n╔═══════════════════════════════════════════════════════╗');
   console.log('║   SERVIDORES INICIADOS                                ║');
   console.log('╚═══════════════════════════════════════════════════════╝');
+  console.log(`${colors.green}Redis:${colors.reset}    localhost:6380`);
   console.log(`${colors.cyan}Backend:${colors.reset}  http://localhost:4000 (ou conforme PORT no .env)`);
   console.log(`${colors.magenta}Frontend:${colors.reset} http://localhost:5173 (ou conforme Vite)`);
-  console.log(`\n${colors.yellow}Pressione Ctrl+C para parar ambos os servidores${colors.reset}\n`);
+  console.log(`\n${colors.yellow}Pressione Ctrl+C para parar todos os servidores${colors.reset}\n`);
 }, 3000);

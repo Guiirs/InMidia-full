@@ -343,7 +343,7 @@ export const fetchClientes = async (params) => {
     }
 };
 
-export const createCliente = async (formData) => {
+export const createclienteId = async (formData) => {
     try {
         const response = await apiClient.post('/clientes', formData);
         return response.data;
@@ -353,7 +353,7 @@ export const createCliente = async (formData) => {
     }
 };
 
-export const updateCliente = async (id, formData) => {
+export const updateclienteId = async (id, formData) => {
     try {
         const response = await apiClient.put(`/clientes/${id}`, formData);
         return response.data;
@@ -363,7 +363,7 @@ export const updateCliente = async (id, formData) => {
     }
 };
 
-export const deleteCliente = async (id) => {
+export const deleteclienteId = async (id) => {
     try {
         await apiClient.delete(`/clientes/${id}`);
     } catch (error) {
