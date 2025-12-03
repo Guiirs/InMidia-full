@@ -14,11 +14,11 @@ import apiClient from './apiClient';
  * @returns {Promise<Object>} Job information with jobId
  */
 export const queuePDFJob = async (entityId, entityType, options = {}) => {
-    const response = await apiClient.post('/queue/pdf', {
-        entityId,
-        entityType,
-        options
-    });
+    const endpoint = entityType === 'contrato' 
+        ? `/queue/contratos/${entityId}/generate-pdf`
+        : `/queue/pis/${entityId}/generate-pdf`;
+    
+    const response = await apiClient.post(endpoint, options);
     return response.data;
 };
 

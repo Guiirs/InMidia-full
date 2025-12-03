@@ -1,5 +1,5 @@
 // services/biWeekService.js
-import apiClient from './api';
+import apiClient from './apiClient'; // ✅ CORREÇÃO: Usar apiClient ao invés de api
 
 /**
  * Service para gerenciar Bi-Semanas (períodos de 14 dias)

@@ -13,7 +13,7 @@ export const handleBlobDownload = (response) => {
     const blob = response.data;
     
     // Extrai filename do Content-Disposition header
-    let filename = 'download.pdf'; // Default
+    let filename = 'download'; // Default sem extensão
     const contentDisposition = response.headers['content-disposition'];
     
     if (contentDisposition) {

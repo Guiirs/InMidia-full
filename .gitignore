@@ -1,0 +1,49 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node modules - todos os diretórios
+**/node_modules/
+node_modules/
+
+# Arquivos de ambiente - NUNCA ENVIE SUAS SENHAS/CHAVES!
+**/.env
+**/.env.*
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Diretório de build (se aplicável)
+dist/
+build/
+**/dist/
+**/build/
+
+# Bancos de dados locais (SQLite, etc.)
+*.db3 
+db/database/*.db3
+
+# Backups e sessões
+/backups/
+**/backups/
+whatsapp-session/
+whatsapp-sessions/
+**/whatsapp-session/
+**/whatsapp-sessions/
+_old_js/
+.wwebjs_cache/
+
+# Lock files (opcional - descomente se quiser ignorar)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

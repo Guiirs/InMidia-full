@@ -26,6 +26,9 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
     const isDebug = typeof window !== 'undefined' && !!localStorage.getItem('PI_DEBUG');
     const dbg = (...args) => { if (isDebug && import.meta.env.DEV) console.debug('[Page2Placas]', ...args); };
 
+    // Log dos valores recebidos
+    console.log('[Page2Placas] Props recebidas:', { dataInicio, dataFim, piId });
+
     // RHF controller para o campo 'placas'
     const { field, fieldState: { error } } = useController({
         name,
@@ -44,12 +47,20 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
         queryKey: ['placas', selectedRegiao, debouncedPlacaSearch],
         queryFn: () => {
             const params = new URLSearchParams();
-            if (selectedRegiao) params.append('regiao', selectedRegiao);
+            // CORREÇÃO: Buscar TODAS as placas sem paginação
+            params.append('limit', '1000'); // Limite alto para garantir todas as placas
+            if (selectedRegiao) params.append('regiao_id', selectedRegiao); // ✅ CORREÇÃO: usar 'regiao_id'
             if (debouncedPlacaSearch) params.append('search', debouncedPlacaSearch);
+            
+            console.log('🔍 [Page2Placas] Buscando todas as placas com params:', params.toString());
             return fetchPlacas(params);
         },
         staleTime: 1000 * 60 * 10,
-        select: data => data.data ?? []
+        select: data => {
+            const result = data.data ?? [];
+            console.log('📦 [Page2Placas] allPlacasData recebeu:', result.length, 'placas');
+            return result;
+        }
     });
 
     const { data: placasDisponiveis = [], isLoading: isLoadingDisponiveis, isFetching: isFetchingDisponiveis } = useQuery({
@@ -60,11 +71,11 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
                 return Promise.resolve({ data: [] });
             }
             const params = new URLSearchParams({ dataInicio, dataFim });
-            if (selectedRegiao) params.append('regiao', selectedRegiao);
+            if (selectedRegiao) params.append('regiao_id', selectedRegiao); // ✅ CORREÇÃO: usar 'regiao_id'
             if (debouncedPlacaSearch) params.append('search', debouncedPlacaSearch);
             if (piId) params.append('excludePiId', piId);
             
-            console.log('🔍 [Page2Placas] Buscando placas disponíveis:', { 
+            console.log('🔍 [Page2Placas] Buscando placas disponíveis (para referência):', { 
                 dataInicio, 
                 dataFim, 
                 regiao: selectedRegiao || 'todas',
@@ -74,26 +85,24 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
             
             const response = await fetchPlacasDisponiveis(params);
             
-            console.log('📦 [Page2Placas] API retornou:', {
+            console.log('📦 [Page2Placas] API retornou (para referência):', {
                 total: response?.data?.length || 0,
                 primeiras: response?.data?.slice(0, 3).map(p => p.numero_placa).join(', ') || 'nenhuma'
             });
             
             return response;
         },
-        enabled: !!dataInicio && !!dataFim,
-        staleTime: 0, // Desabilita cache - sempre busca dados frescos
-        gcTime: 0, // Limpa cache imediatamente
+        enabled: false, // Desabilitada pois não usamos mais para determinar disponibilidade
+        staleTime: 0,
+        gcTime: 0,
         select: data => {
             const result = data.data ?? [];
-            console.log('✅ [Page2Placas] Placas selecionadas do cache:', result.length);
+            console.log('✅ [Page2Placas] Placas da API (não usadas):', result.length);
             return result;
         }
     });
 
     const isLoading = isLoadingRegioes || isLoadingAllPlacas;
-
-    // Map ID -> Placa para lookup rápido
     const allPlacasMap = useMemo(() => {
         return (allPlacasData || []).reduce((m, p) => {
             const id = p._id || p.id || p.numero_placa;
@@ -102,35 +111,15 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
         }, new Map());
     }, [allPlacasData]);
 
-    // Cache local por filterKey: preserva a última lista útil para os filtros atuais
+    // Cache local por filterKey: não usado mais, mas mantido para compatibilidade
     const cacheRef = useRef(new Map());
     const filterKey = `${dataInicio || ''}|${dataFim || ''}|${selectedRegiao || ''}|${debouncedPlacaSearch || ''}|${piId || ''}`;
 
-    useEffect(() => {
-        if (Array.isArray(placasDisponiveis) && placasDisponiveis.length > 0) {
-            cacheRef.current.set(filterKey, placasDisponiveis);
-            dbg('cache set', { filterKey, count: placasDisponiveis.length });
-        }
-    }, [placasDisponiveis, filterKey]);
-
-    const placasDisponiveisSource = (Array.isArray(placasDisponiveis) && placasDisponiveis.length > 0)
-        ? placasDisponiveis
-        : (cacheRef.current.get(filterKey) || placasDisponiveis || []);
-    dbg('placasDisponiveisSource', { filterKey, sourceCount: placasDisponiveisSource.length, apiCount: placasDisponiveis.length });
+    // Não usamos mais placasDisponiveisSource
+    // const placasDisponiveisSource = ...
+    // dbg('placasDisponiveisSource', ...);
 
     const selectedIds = field.value || [];
-
-    // Available = source - selected
-    const placasDisponiveisFiltradas = useMemo(() => {
-        const s = new Set(selectedIds);
-        return placasDisponiveisSource.filter(p => {
-            const id = p._id || p.id || p.numero_placa;
-            return !s.has(id);
-        });
-    }, [placasDisponiveisSource, selectedIds]);
-
-    // Aria-live message para leitores de tela (mais descritivo)
-    const [ariaMessage, setAriaMessage] = useState('');
 
     // Helper: verifica se uma placa bate nos filtros atuais (regiao + busca)
     const matchesFilter = (p) => {
@@ -148,26 +137,36 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
         return true;
     };
 
-    // Placas indisponíveis (estão no cadastro geral, mas não na lista de disponíveis)
-    const placasDisponiveisIds = useMemo(() => {
-        const ids = new Set((placasDisponiveisSource || []).map(p => p._id || p.id || p.numero_placa));
-        dbg('placasDisponiveisIds:', ids.size);
-        return ids;
-    }, [placasDisponiveisSource]);
+    // Available = source - selected
+    const placasDisponiveisFiltradas = useMemo(() => {
+        const s = new Set(selectedIds);
 
-    const placasIndisponiveis = useMemo(() => {
-        // Pegamos do allPlacasData apenas as que batem nos filtros e não estão na lista de disponíveis
-        const result = (allPlacasData || []).filter(p => {
+        // CORREÇÃO: Sempre usa todas as placas filtradas como disponíveis
+        // A verificação de disponibilidade por data será feita no backend durante o submit
+        const sourcePlacas = (allPlacasData || []).filter(matchesFilter);
+        console.log('🔄 [Page2Placas] Usando allPlacasData filtrado como disponíveis:', sourcePlacas.length);
+
+        const result = sourcePlacas.filter(p => {
             const id = p._id || p.id || p.numero_placa;
-            if (!matchesFilter(p)) return false;
-            if (selectedIds.includes(id)) return false; // já selecionada pelo formulário
-            if (placasDisponiveisIds.has(id)) return false; // já disponível
-            return true;
+            return !s.has(id);
         });
 
-        dbg('placasIndisponiveis:', result.length);
+        console.log('✅ [Page2Placas] Placas disponíveis filtradas (após remover selecionadas):', result.length);
         return result;
-    }, [allPlacasData, matchesFilter, selectedIds, placasDisponiveisIds]);
+    }, [allPlacasData, matchesFilter, selectedIds]);
+
+    // Aria-live message para leitores de tela (mais descritivo)
+    const [ariaMessage, setAriaMessage] = useState('');
+
+    // Placas indisponíveis: não existem mais nesta implementação
+    // const placasDisponiveisIds = ...
+
+    const placasIndisponiveis = useMemo(() => {
+        // CORREÇÃO: Como todas as placas são consideradas disponíveis,
+        // não há placas indisponíveis nesta implementação
+        console.log('🚫 [Page2Placas] Nenhuma placa é considerada indisponível nesta implementação');
+        return [];
+    }, []);
 
     // Selected details (fallback placeholder)
     const placasSelecionadas = useMemo(() => selectedIds.map(id => {
@@ -232,8 +231,8 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
             </div>
 
             <div className="pi-selector__list-container" style={{ position: 'relative' }}>
-                {/* Indicador visual de revalidação em background */}
-                {isFetchingDisponiveis && !isLoadingDisponiveis && (
+                {/* Indicador visual de carregamento removido pois não usamos mais a API de disponibilidade */}
+                {false && (
                     <div style={{ 
                         position: 'absolute', 
                         top: 8, 
@@ -261,7 +260,7 @@ export function Page2Placas({ name, control, isSubmitting, dataInicio, dataFim, 
                 )}
 
                 <div className="pi-selector__list" style={{ 
-                    opacity: isFetchingDisponiveis ? 0.7 : 1,
+                    opacity: 1, // Removido o efeito de fetching
                     transition: 'opacity 0.3s ease'
                 }}>
                     <h4 id="placas-disponiveis-heading">Placas Disponíveis ({placasDisponiveisFiltradas.length})</h4>

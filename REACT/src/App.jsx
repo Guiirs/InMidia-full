@@ -44,6 +44,7 @@ const PIsPage = lazy(() => import('./pages/PIs/PIsPage'));
 const EmpresaSettingsPage = lazy(() => import('./pages/Empresa/EmpresaSettingsPage'));
 const EmpresaDetalhes = lazy(() => import('./pages/Empresa/subpages/EmpresaDetalhes'));
 const EmpresaApiKey = lazy(() => import('./pages/Empresa/subpages/EmpresaApiKey'));
+const EmpresaWhatsApp = lazy(() => import('./pages/Empresa/subpages/EmpresaWhatsApp'));
 const ContratosPage = lazy(() => import('./pages/Contratos/ContratosPage'));
 const DocsPage = lazy(() => import('./pages/Docs/DocsPage')); // Assumindo que a DocsPage existe
 const BiWeeksPage = lazy(() => import('./pages/BiWeeks/BiWeeksPage')); // <-- NOVO: Calendário de Bi-Semanas
@@ -99,6 +100,7 @@ function App() {
               <Route index element={<Navigate to="detalhes" replace />} />
               <Route path="detalhes" element={<EmpresaDetalhes />} />
               <Route path="clientes" element={<ClientesPage />} />
+              <Route path="whatsapp" element={<EmpresaWhatsApp />} />
               <Route path="propostas" element={<PIsPage />} />
               <Route path="contratos" element={<ContratosPage />} />
               <Route element={<AdminRoute />}>

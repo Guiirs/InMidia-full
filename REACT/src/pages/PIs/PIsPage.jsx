@@ -1,7 +1,7 @@
 // src/pages/PIs/PIsPage.jsx
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createPI, deletePI, fetchPIs, updatePI, createContrato, queuePDFJob } from '../../services';
+import { createPI, deletePI, fetchPIs, updatePI, createContrato, queuePDFJob, downloadPI_PDF, downloadPI_Excel, downloadPI_PDF_FromExcel } from '../../services';
 // import { usePlacaFilters } from '../../hooks/usePlacaFilters'; // <-- IMPORT REMOVIDO
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
@@ -246,6 +246,49 @@ function PIsPage() {
     };
 
     const onGeneratePDFClick = (piId) => generatePDFMutation.mutate(piId);
+
+    // Download handlers
+    const [downloadingPIId, setDownloadingPIId] = useState(null);
+
+    const handleDownloadPDF = async (piId) => {
+        setDownloadingPIId(piId);
+        try {
+            const { blob, filename } = await downloadPI_PDF(piId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `PI-${piId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('PDF baixado com sucesso!', 'success');
+        } catch (error) {
+            showToast(error.message || 'Erro ao baixar PDF.', 'error');
+        } finally {
+            setDownloadingPIId(null);
+        }
+    };
+
+    const handleDownloadExcel = async (piId) => {
+        setDownloadingPIId(piId);
+        try {
+            const { blob, filename } = await downloadPI_Excel(piId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `PI-${piId}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('Excel baixado com sucesso! 📊', 'success');
+        } catch (error) {
+            showToast(error.message || 'Erro ao baixar Excel.', 'error');
+        } finally {
+            setDownloadingPIId(null);
+        }
+    };
     
     const isMutating = createPIMutation.isPending || updatePIMutation.isPending;
     const isGeneratingContrato = createContratoMutation.isPending;
@@ -283,6 +326,9 @@ function PIsPage() {
                             currentJobStatus={jobStatus}
                             isPolling={isPolling}
                             onGeneratePDF={onGeneratePDFClick}
+                            onDownloadPDF={handleDownloadPDF}
+                            onDownloadExcel={handleDownloadExcel}
+                            downloadingPIId={downloadingPIId}
                         /></table>
                 </div>
             )}

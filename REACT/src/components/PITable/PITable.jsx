@@ -1,5 +1,5 @@
 // src/components/PITable/PITable.jsx
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -13,13 +13,55 @@ import {
 import Spinner from '../Spinner/Spinner';
 
 // O export é 'function', então a importação com { PIsTable } está correta.
-export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGeneratingContrato, processingPIId, onStatusChange, currentJobStatus, isPolling, onGeneratePDF }) {
+export function PIsTable({ 
+    pis, 
+    onEdit, 
+    onDelete, 
+    onGenerateContrato, 
+    isGeneratingContrato, 
+    processingPIId, 
+    onStatusChange, 
+    currentJobStatus, 
+    isPolling, 
+    onGeneratePDF,
+    onDownloadPDF,
+    onDownloadExcel,
+    downloadingPIId
+}) {
     
     const navigate = useNavigate();
     const showToast = useToast();
     const { user } = useAuth();
     
     const [generatingPDFId, setGeneratingPDFId] = React.useState(null);
+    const [openDropdownId, setOpenDropdownId] = useState(null);
+    const dropdownRef = useRef(null);
+
+    // Fecha dropdown ao clicar fora
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpenDropdownId(null);
+            }
+        };
+
+        if (openDropdownId) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [openDropdownId]);
+
+    const toggleDropdown = (piId) => {
+        setOpenDropdownId(openDropdownId === piId ? null : piId);
+    };
+
+    const handleDownloadOption = (piId, action) => {
+        setOpenDropdownId(null);
+        action(piId);
+    };
     // O 'isGeneratingContrato' agora é uma prop vinda do 'PIsPage'
 
     const handleGeneratePDFClick = async (piId) => {
@@ -80,8 +122,11 @@ export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGenerati
                 const isThisPIProcessingContrato = processingPIId === pi._id;
                 // Check if this PI is the current job
                 const isCurrentJob = currentJobStatus && currentJobStatus.piId === pi._id;
+                // Check if this PI is downloading
+                const isThisPIDownloading = downloadingPIId === pi._id;
                 // Desabilita botões se QUALQUER geração de PDF ou contrato estiver ativa
-                const isDisabled = isThisPIGeneratingPDF || isGeneratingContrato || (isCurrentJob && isPolling);
+                const isDisabled = isThisPIGeneratingPDF || isGeneratingContrato || (isCurrentJob && isPolling) || isThisPIDownloading;
+                const isDropdownOpen = openDropdownId === pi._id;
 
                 return (
                     <tr key={pi._id} className={isVencida ? 'pi-vencida' : ''}>
@@ -122,14 +167,99 @@ export function PIsTable({ pis, onEdit, onDelete, onGenerateContrato, isGenerati
                             </button>
                             {/* --- FIM DA CORREÇÃO --- */}
                             
-                            <button 
-                                className="table-action-button" 
-                                title={isCurrentJob && isPolling ? `Gerando PDF: ${currentJobStatus.status}` : "Gerar PDF da PI"}
-                                onClick={() => handleGeneratePDFClick(pi._id)}
-                                disabled={isDisabled}
+                            {/* Dropdown para Downloads */}
+                            <div 
+                                className="action-dropdown" 
+                                style={{ position: 'relative', display: 'inline-block' }}
+                                ref={isDropdownOpen ? dropdownRef : null}
                             >
-                                {isThisPIGeneratingPDF || (isCurrentJob && isPolling) ? <Spinner mini /> : <i className="fas fa-file-pdf"></i>}
-                            </button>
+                                <button 
+                                    className="table-action-button" 
+                                    title="Download"
+                                    onClick={() => toggleDropdown(pi._id)}
+                                    disabled={isDisabled}
+                                >
+                                    {isThisPIDownloading ? (
+                                        <Spinner mini />
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-download"></i>
+                                            <i className="fas fa-caret-down" style={{ marginLeft: '4px', fontSize: '10px' }}></i>
+                                        </>
+                                    )}
+                                </button>
+                                
+                                {isDropdownOpen && (
+                                    <div className="dropdown-menu" style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        right: '0',
+                                        backgroundColor: 'white',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '4px',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                        zIndex: 1000,
+                                        minWidth: '200px',
+                                        marginTop: '4px'
+                                    }}>
+                                        <button
+                                            className="dropdown-item"
+                                            onClick={() => handleDownloadOption(pi._id, onDownloadExcel)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 15px',
+                                                border: 'none',
+                                                background: 'none',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                fontSize: '14px'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                                        >
+                                            <i className="fas fa-file-excel" style={{ marginRight: '8px', color: '#27ae60' }}></i>
+                                            Excel (.xlsx) ⭐
+                                        </button>
+                                        <button
+                                            className="dropdown-item"
+                                            onClick={() => handleDownloadOption(pi._id, onDownloadPDF)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 15px',
+                                                border: 'none',
+                                                background: 'none',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                fontSize: '14px'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                                        >
+                                            <i className="fas fa-file-pdf" style={{ marginRight: '8px', color: '#e74c3c' }}></i>
+                                            PDF
+                                        </button>
+                                        <div style={{ borderTop: '1px solid #eee', margin: '4px 0' }}></div>
+                                        <button
+                                            className="dropdown-item"
+                                            onClick={() => handleDownloadOption(pi._id, () => handleGeneratePDFClick(pi._id))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 15px',
+                                                border: 'none',
+                                                background: 'none',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                fontSize: '14px'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                                        >
+                                            <i className="fas fa-paper-plane" style={{ marginRight: '8px', color: '#3498db' }}></i>
+                                            Enviar PDF via WhatsApp
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
 
                             <button 
                                 className="table-action-button action-contrato" 
@@ -158,4 +288,7 @@ PIsTable.propTypes = {
     currentJobStatus: PropTypes.object,
     isPolling: PropTypes.bool,
     onGeneratePDF: PropTypes.func,
+    onDownloadPDF: PropTypes.func,
+    onDownloadExcel: PropTypes.func,
+    downloadingPIId: PropTypes.string,
 };

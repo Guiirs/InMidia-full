@@ -1,7 +1,15 @@
 // src/pages/Contratos/ContratosPage.jsx
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchContratos, updateContrato, deleteContrato, queuePDFJob } from '../../services';
+import { 
+    fetchContratos, 
+    updateContrato, 
+    deleteContrato, 
+    queuePDFJob,
+    downloadContrato_PDF,
+    downloadContrato_Excel,
+    downloadContrato_PDF_FromTemplate
+} from '../../services';
 import { useToast } from '../../components/ToastNotification/ToastNotification';
 import { useConfirmation } from '../../context/ConfirmationContext';
 import { useJobStatus } from '../../hooks/useJobStatus';
@@ -74,6 +82,7 @@ function ContratosPage() {
     const [actionState, setActionState] = useState({
         isDeleting: null,
         isGeneratingPDF: null,
+        isDownloading: null,
     });
 
     // Update (Mudar Status)
@@ -113,6 +122,63 @@ function ContratosPage() {
         onSettled: () => setActionState(s => ({ ...s, isGeneratingPDF: null }))
     });
 
+    // Download PDF via Template (NOVO)
+    const downloadPDFTemplateMutation = useMutation({
+        mutationFn: (contratoId) => downloadContrato_PDF_FromTemplate(contratoId),
+        onMutate: (contratoId) => setActionState(s => ({ ...s, isDownloading: { contratoId } })),
+        onSuccess: ({ blob, filename }) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `contrato-${Date.now()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('PDF baixado com sucesso! ⭐', 'success');
+        },
+        onError: (error) => showToast(error.message || 'Erro ao baixar PDF.', 'error'),
+        onSettled: () => setActionState(s => ({ ...s, isDownloading: null }))
+    });
+
+    // Download PDF Nativo
+    const downloadPDFMutation = useMutation({
+        mutationFn: (contratoId) => downloadContrato_PDF(contratoId),
+        onMutate: (contratoId) => setActionState(s => ({ ...s, isDownloading: { contratoId } })),
+        onSuccess: ({ blob, filename }) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `contrato-${Date.now()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('PDF baixado com sucesso!', 'success');
+        },
+        onError: (error) => showToast(error.message || 'Erro ao baixar PDF.', 'error'),
+        onSettled: () => setActionState(s => ({ ...s, isDownloading: null }))
+    });
+
+    // Download Excel
+    const downloadExcelMutation = useMutation({
+        mutationFn: (contratoId) => downloadContrato_Excel(contratoId),
+        onMutate: (contratoId) => setActionState(s => ({ ...s, isDownloading: { contratoId } })),
+        onSuccess: ({ blob, filename }) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `contrato-${Date.now()}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('Excel baixado com sucesso!', 'success');
+        },
+        onError: (error) => showToast(error.message || 'Erro ao baixar Excel.', 'error'),
+        onSettled: () => setActionState(s => ({ ...s, isDownloading: null }))
+    });
+
     // --- Handlers ---
     const openEditModal = (contrato) => { setEditingContrato(contrato); setIsModalOpen(true); };
     const closeModal = () => { setIsModalOpen(false); setEditingContrato(null); };
@@ -128,7 +194,7 @@ function ContratosPage() {
     const onDeleteClick = async (contrato) => {
         try {
             await showConfirmation({
-                message: `Tem a certeza que deseja apagar o contrato do cliente "${contrato.clienteIdId.nome}"? (Apenas rascunhos podem ser apagados).`,
+                message: `Tem a certeza que deseja apagar o contrato do cliente "${contrato.clienteId?.nome || 'desconhecido'}"? (Apenas rascunhos podem ser apagados).`,
                 title: "Confirmar Exclusão",
                 confirmButtonType: "red",
             });
@@ -138,6 +204,15 @@ function ContratosPage() {
 
     // Generate PDF (Queue-based)
     const onGeneratePDF = (contrato) => generatePDFMutation.mutate(contrato._id);
+
+    // Download PDF via Template (NOVO)
+    const onDownloadPDFTemplate = (contrato) => downloadPDFTemplateMutation.mutate(contrato._id);
+
+    // Download PDF Nativo
+    const onDownloadPDF = (contrato) => downloadPDFMutation.mutate(contrato._id);
+
+    // Download Excel
+    const onDownloadExcel = (contrato) => downloadExcelMutation.mutate(contrato._id);
 
     // --- Renderização ---
     const colSpan = 7; // Ajuste o número de colunas
@@ -158,8 +233,12 @@ function ContratosPage() {
                 onEditStatusClick={openEditModal}
                 onDeleteClick={onDeleteClick}
                 onGeneratePDF={onGeneratePDF}
+                onDownloadPDF={onDownloadPDF}
+                onDownloadExcel={onDownloadExcel}
+                onDownloadPDFTemplate={onDownloadPDFTemplate}
                 isDeleting={actionState.isDeleting}
                 isGeneratingPDF={actionState.isGeneratingPDF}
+                isDownloading={actionState.isDownloading}
                 currentJobStatus={jobStatus}
                 isPolling={isPolling}
             />

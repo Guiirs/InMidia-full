@@ -47,6 +47,16 @@ function EmpresaSettingsPage() {
         </NavLink>
         {/* --- FIM DA ADIÇÃO --- */}
         
+        {/* --- NOVO LINK DE WHATSAPP ADICIONADO AQUI --- */}
+        <NavLink
+          to="whatsapp" // Caminho relativo (para /empresa-settings/whatsapp)
+          className={getNavLinkClass} 
+        >
+          <i className="fab fa-whatsapp"></i>
+          WhatsApp
+        </NavLink>
+        {/* --- FIM DA ADIÇÃO --- */}
+        
         {/* Só mostra a aba de API Key se for Admin */}
         {user?.role === 'admin' && (
           <NavLink

@@ -70,3 +70,15 @@ export const downloadPI_Excel = async (id) => {
     });
     return handleBlobDownload(response);
 };
+
+/**
+ * Download PDF da PI (convertido do Excel)
+ * @param {string} id - ID da PI
+ * @returns {Promise<Object>} { blob, filename }
+ */
+export const downloadPI_PDF_FromExcel = async (id) => {
+    const response = await apiClient.get(`/pis/${id}/pdf-template`, {
+        responseType: 'blob'
+    });
+    return handleBlobDownload(response);
+};

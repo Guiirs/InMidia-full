@@ -48,12 +48,36 @@ export const deleteContrato = async (id) => {
 };
 
 /**
- * Download PDF do contrato
+ * Download PDF do contrato (método nativo com pdfkit)
  * @param {string} id - ID do contrato
  * @returns {Promise<Object>} { blob, filename }
  */
 export const downloadContrato_PDF = async (id) => {
     const response = await apiClient.get(`/contratos/${id}/download`, {
+        responseType: 'blob'
+    });
+    return handleBlobDownload(response);
+};
+
+/**
+ * Download Excel do contrato
+ * @param {string} id - ID do contrato
+ * @returns {Promise<Object>} { blob, filename }
+ */
+export const downloadContrato_Excel = async (id) => {
+    const response = await apiClient.get(`/contratos/${id}/excel`, {
+        responseType: 'blob'
+    });
+    return handleBlobDownload(response);
+};
+
+/**
+ * Download PDF do contrato via Excel Template (NOVO - Conversor XLSX to PDF)
+ * @param {string} id - ID do contrato
+ * @returns {Promise<Object>} { blob, filename }
+ */
+export const downloadContrato_PDF_FromTemplate = async (id) => {
+    const response = await apiClient.get(`/contratos/${id}/pdf-template`, {
         responseType: 'blob'
     });
     return handleBlobDownload(response);
